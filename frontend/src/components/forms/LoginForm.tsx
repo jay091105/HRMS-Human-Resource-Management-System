@@ -21,7 +21,18 @@ export const LoginForm: React.FC = () => {
       await login({ email: loginId, password });
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      const errorMessage = err.response?.data?.message || err.message || 'Login failed';
+      
+      // Provide helpful error messages
+      if (errorMessage.includes('Invalid credentials') || errorMessage.includes('credentials')) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else if (err.response?.status === 401) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else if (err.response?.status === 404 || err.response?.status === 0) {
+        setError('Cannot connect to server. Please make sure the backend server is running.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

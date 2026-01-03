@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useRole } from '../../../hooks/useRole';
 import { attendanceService } from '../../../services/attendance.service';
 import { Attendance } from '../../../types/attendance';
-import { Button } from '../../../components/ui/Button';
 import { AdminAttendanceView } from './AdminAttendanceView';
 import { MonthlyAttendanceView } from './MonthlyAttendanceView';
 import { formatTime, getDateString } from '../../../utils/formatDate';
@@ -122,9 +121,9 @@ export const AttendancePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
+      <div className="p-8 flex items-center justify-center min-h-screen bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading attendance...</p>
         </div>
       </div>
@@ -137,100 +136,174 @@ export const AttendancePage: React.FC = () => {
   // Get current month name
   const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
+  const formatTimeWorked = (hours?: number): string => {
+    if (!hours || hours === 0) return '--';
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (h > 0 && m > 0) {
+      return `${h}h ${m}m`;
+    } else if (h > 0) {
+      return `${h}h`;
+    } else {
+      return `${m}m`;
+    }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    if (!status) {
+      return (
+        <span className="inline-flex px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
+          N/A
+        </span>
+      );
+    }
+
+    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+      present: { bg: 'bg-green-50', text: 'text-green-700', label: 'Present' },
+      late: { bg: 'bg-yellow-50', text: 'text-yellow-700', label: 'Late' },
+      absent: { bg: 'bg-red-50', text: 'text-red-700', label: 'Absent' },
+      'half-day': { bg: 'bg-orange-50', text: 'text-orange-700', label: 'Half Day' },
+    };
+
+    const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-700', label: status };
+
+    return (
+      <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+        {config.label}
+      </span>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Attendance</h1>
-          <p className="text-gray-600 mt-1">Track your daily attendance and working hours</p>
-        </div>
-        {!isAdmin && (
-          <div className="flex gap-2">
-            <Button
-              onClick={handleCheckIn}
-              disabled={!canCheckIn}
-              className={canCheckIn ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}
-            >
-              {canCheckIn ? 'Check In' : 'Already Checked In'}
-            </Button>
-            <Button
-              onClick={handleCheckOut}
-              disabled={!canCheckOut}
-              className={canCheckOut ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}
-            >
-              {canCheckOut ? 'Check Out' : 'Already Checked Out'}
-            </Button>
-          </div>
-        )}
+    <div className="min-h-screen bg-gray-100 p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1">My Attendance</h1>
+        <p className="text-sm text-gray-600">Track your daily attendance and working hours</p>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">{error}</p>
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800">{success}</p>
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-800">{success}</p>
         </div>
       )}
 
-      {!isAdmin && todayAttendance && (
-        <div className="mb-6 bg-white border-l-4 border-blue-500 rounded-lg shadow-md p-6">
-          <h3 className="font-semibold text-gray-900 mb-4 text-lg">Today's Status</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="bg-blue-50 rounded-lg p-3">
-              <span className="text-blue-600 text-xs font-medium">Check-in</span>
-              <p className="text-gray-900 font-semibold mt-1">
-                {todayAttendance.checkIn ? new Date(todayAttendance.checkIn).toLocaleTimeString() : 'Not checked in'}
-              </p>
+      {/* Check In/Out Actions */}
+      {!isAdmin && (
+        <div className="bg-white rounded-lg shadow-sm p-5 mb-6 border border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-1">Today's Attendance</h3>
+              <p className="text-xs text-gray-500">Mark your attendance for today</p>
             </div>
-            <div className="bg-blue-50 rounded-lg p-3">
-              <span className="text-blue-600 text-xs font-medium">Check-out</span>
-              <p className="text-gray-900 font-semibold mt-1">
-                {todayAttendance.checkOut ? new Date(todayAttendance.checkOut).toLocaleTimeString() : 'Not checked out'}
-              </p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-3">
-              <span className="text-blue-600 text-xs font-medium">Hours Worked</span>
-              <p className={`font-semibold mt-1 ${todayAttendance.checkOut ? 'text-gray-900' : 'text-orange-600'}`}>
-                {todayAttendance.checkOut && todayAttendance.hoursWorked !== undefined
-                  ? (() => {
-                      const hours = Math.floor(todayAttendance.hoursWorked);
-                      const minutes = Math.round((todayAttendance.hoursWorked % 1) * 60);
-                      if (hours > 0 && minutes > 0) {
-                        return `${hours}h ${minutes}m`;
-                      } else if (hours > 0) {
-                        return `${hours}h`;
-                      } else if (minutes > 0) {
-                        return `${minutes}m`;
-                      }
-                      return '0h';
-                    })()
-                  : 'Incomplete'}
-              </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCheckIn}
+                disabled={!canCheckIn}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  canCheckIn
+                    ? 'bg-gray-900 text-white hover:bg-gray-800'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Check In
+              </button>
+              <button
+                onClick={handleCheckOut}
+                disabled={!canCheckOut}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  canCheckOut
+                    ? 'bg-gray-900 text-white hover:bg-gray-800'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Check Out
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            My Attendance - {currentMonth}
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Day-wise attendance for the current month
-          </p>
+      {/* Today's Status Cards */}
+      {!isAdmin && todayAttendance && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Check In</p>
+                <p className="text-xl font-semibold text-gray-900 mt-2">
+                  {todayAttendance.checkIn ? formatTime(todayAttendance.checkIn) : '--'}
+                </p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-2.5">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            {todayAttendance.hoursWorked && todayAttendance.checkOut && (
+              <div className="bg-blue-50 rounded-lg p-3">
+                <span className="text-blue-600 text-xs font-medium">Hours Worked</span>
+                <p className="text-gray-900 font-semibold mt-1">
+                  {(() => {
+                    const hours = Math.floor(todayAttendance.hoursWorked);
+                    const minutes = Math.round((todayAttendance.hoursWorked % 1) * 60);
+                    if (hours > 0 && minutes > 0) {
+                      return `${hours}h ${minutes}m`;
+                    } else if (hours > 0) {
+                      return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+                    } else if (minutes > 0) {
+                      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+                    }
+                    return '0 hours';
+                  })()}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {todayAttendance.hoursWorked && (
+            <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hours Worked</p>
+                  <p className="text-xl font-semibold text-gray-900 mt-2">
+                    {formatTimeWorked(todayAttendance.hoursWorked)}
+                  </p>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-2.5">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        <Button
-          onClick={() => setShowMonthlyView(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          View Monthly Report
-        </Button>
-      </div>
+      )}
+
+      {/* Monthly Attendance Section */}
+      <div className="bg-white rounded-lg shadow-sm p-5 mb-6 border border-gray-200">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+              Attendance - {currentMonth}
+            </h2>
+            <p className="text-xs text-gray-500">Day-wise attendance for the current month</p>
+          </div>
+          <button
+            onClick={() => setShowMonthlyView(true)}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+          >
+            View Monthly Report
+          </button>
+        </div>
 
       {attendances.length > 0 ? (
         <div className="space-y-4">
@@ -280,27 +353,21 @@ export const AttendancePage: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`text-sm ${
-                            attendance.checkOut && attendance.hoursWorked && attendance.hoursWorked > 0
-                              ? 'text-green-600 font-medium'
-                              : attendance.checkOut
-                              ? 'text-gray-600'
-                              : 'text-orange-600 font-medium'
-                          }`}>
-                            {attendance.checkOut && attendance.hoursWorked !== undefined
+                          <span className={`text-sm ${attendance.hoursWorked ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                            {attendance.hoursWorked && attendance.checkOut
                               ? (() => {
                                   const hours = Math.floor(attendance.hoursWorked);
                                   const minutes = Math.round((attendance.hoursWorked % 1) * 60);
                                   if (hours > 0 && minutes > 0) {
                                     return `${hours}h ${minutes}m`;
                                   } else if (hours > 0) {
-                                    return `${hours}h`;
+                                    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
                                   } else if (minutes > 0) {
-                                    return `${minutes}m`;
+                                    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
                                   }
-                                  return '0h';
+                                  return '0 hours';
                                 })()
-                              : 'Incomplete'}
+                              : '--'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
