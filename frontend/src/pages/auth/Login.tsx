@@ -17,6 +17,12 @@ export const Login: React.FC = () => {
             Sign Up
           </Link>
         </p>
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs text-blue-800">
+            <strong>First time setup?</strong> Create admin user by running:<br />
+            <code className="text-xs bg-blue-100 px-1 rounded">cd backend && npm run create-admin</code>
+          </p>
+        </div>
       </div>
     </div>
   );
