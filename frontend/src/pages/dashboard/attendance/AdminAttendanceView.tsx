@@ -108,10 +108,16 @@ export const AdminAttendanceView: React.FC = () => {
   };
 
   const formatTimeWorked = (hours?: number): string => {
-    if (!hours) return '--';
+    if (!hours || hours === 0) return '--';
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
-    return `${h}:${String(m).padStart(2, '0')}`;
+    if (h > 0 && m > 0) {
+      return `${h}h ${m}m`;
+    } else if (h > 0) {
+      return `${h}h`;
+    } else {
+      return `${m}m`;
+    }
   };
 
   const getStatusBadge = (status?: string) => {
@@ -373,8 +379,8 @@ export const AdminAttendanceView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm ${attendance.hoursWorked ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                          {formatTimeWorked(attendance.hoursWorked)}
+                        <span className={`text-sm ${attendance.hoursWorked && attendance.hoursWorked > 0 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                          {attendance.checkOut ? formatTimeWorked(attendance.hoursWorked) : '--'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -383,27 +389,25 @@ export const AdminAttendanceView: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => setSelectedEmployeeForMonthly({
-                              employeeId: attendance.employeeId,
-                              employeeName: employeeName,
-                            })}
+                            onClick={() => {
+                              const empId = attendance.employeeId;
+                              if (empId) {
+                                console.log('Opening monthly report for employee:', empId, employeeName);
+                                setSelectedEmployeeForMonthly({
+                                  employeeId: typeof empId === 'string' ? empId : empId.toString(),
+                                  employeeName: employeeName,
+                                });
+                              } else {
+                                console.error('Employee ID not found in attendance:', attendance);
+                                setError('Employee ID not found. Please refresh the page.');
+                              }
+                            }}
                             className="text-blue-600 hover:text-blue-900 flex items-center gap-1 px-2 py-1 rounded hover:bg-blue-50"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
                             <span>Attendance</span>
-                          </button>
-                          <button className="text-blue-600 hover:text-blue-900 flex items-center gap-1 px-2 py-1 rounded hover:bg-blue-50">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            <span>Edit</span>
-                          </button>
-                          <button className="text-red-600 hover:text-red-900 px-2 py-1 rounded hover:bg-red-50">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
                           </button>
                         </div>
                       </td>
@@ -412,7 +416,7 @@ export const AdminAttendanceView: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center">
                       <svg
                         className="w-16 h-16 text-gray-400 mb-4"

@@ -171,25 +171,52 @@ export const attendanceService = {
       query.date = { $gte: dateStart, $lte: dateEnd };
     }
 
-    const attendances = await AttendanceModel.find(query)
-      .sort({ 'employeeId.firstName': 1 })
-      .populate('employeeId', 'firstName lastName employeeId email');
-
+    // First get attendances without populate to preserve employeeId
+    const attendancesRaw = await AttendanceModel.find(query).lean();
+    
+    // Get unique employee IDs
+    const employeeIds = [...new Set(attendancesRaw.map((a: any) => a.employeeId?.toString()))].filter(Boolean);
+    
+    // Fetch employees separately
+    const employees = await EmployeeModel.find({ _id: { $in: employeeIds } })
+      .select('firstName lastName employeeId email')
+      .lean();
+    
+    const employeeMap = new Map(employees.map((emp: any) => [emp._id.toString(), emp]));
+    
     // Format response with employee information
-    return attendances.map((attendance: any) => {
-      const plain = toPlainObject<Attendance>(attendance);
-      if (plain) {
-        const employee = attendance.employeeId;
-        if (employee && typeof employee === 'object') {
-          return {
-            ...plain,
-            employeeName: `${employee.firstName || ''} ${employee.lastName || ''}`.trim(),
-            employeeCode: employee.employeeId || '',
-          };
-        }
+    return attendancesRaw.map((attendance: any) => {
+      const employeeId = attendance.employeeId?.toString();
+      const employee = employeeId ? employeeMap.get(employeeId) : null;
+      
+      const result: any = {
+        _id: attendance._id?.toString(),
+        employeeId: employeeId,
+        date: attendance.date,
+        checkIn: attendance.checkIn,
+        checkOut: attendance.checkOut,
+        status: attendance.status,
+        hoursWorked: attendance.hoursWorked,
+        extraHours: attendance.extraHours || 0,
+        notes: attendance.notes,
+        createdAt: attendance.createdAt,
+        updatedAt: attendance.updatedAt,
+      };
+      
+      if (employee) {
+        result.employeeName = `${employee.firstName || ''} ${employee.lastName || ''}`.trim();
+        result.employeeCode = employee.employeeId || '';
       }
-      return plain;
-    }).filter(Boolean);
+      
+      return result;
+    })
+    .filter(Boolean)
+    .sort((a: any, b: any) => {
+      // Sort by employee name
+      const nameA = (a.employeeName || '').toLowerCase();
+      const nameB = (b.employeeName || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
   },
 
   async getAttendanceStatistics(date: Date): Promise<{
