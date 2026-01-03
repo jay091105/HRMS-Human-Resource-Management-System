@@ -16,7 +16,8 @@ interface AttendanceStatistics {
 }
 
 export const AdminAttendanceView: React.FC = () => {
-  const [attendances, setAttendances] = useState<AttendanceWithEmployee[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFilter = searchParams.get('filter') || '';
   const [allEmployees, setAllEmployees] = useState<AttendanceWithEmployee[]>([]);
   const [filteredAttendances, setFilteredAttendances] = useState<AttendanceWithEmployee[]>([]);
   const [statistics, setStatistics] = useState<AttendanceStatistics>({
@@ -460,8 +461,9 @@ export const AdminAttendanceView: React.FC = () => {
                               const empId = attendance.employeeId;
                               if (empId) {
                                 console.log('Opening monthly report for employee:', empId, employeeName);
+                                const empIdString = typeof empId === 'string' ? empId : String(empId);
                                 setSelectedEmployeeForMonthly({
-                                  employeeId: typeof empId === 'string' ? empId : empId.toString(),
+                                  employeeId: empIdString,
                                   employeeName: employeeName,
                                 });
                               } else {

@@ -305,7 +305,7 @@ export const AttendancePage: React.FC = () => {
           </button>
         </div>
 
-      {attendances.length > 0 ? (
+        {attendances.length > 0 ? (
         <div className="space-y-4">
           {/* Day-wise list view for better month overview */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -402,7 +402,8 @@ export const AttendancePage: React.FC = () => {
             <p className="text-gray-400 text-sm mt-2">Start by checking in for today</p>
           )}
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
