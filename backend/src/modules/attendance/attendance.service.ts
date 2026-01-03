@@ -1,6 +1,9 @@
 import { AttendanceModel } from './attendance.model';
 import { Attendance } from '../../types';
 import { toPlainObject, toPlainObjectArray } from '../../utils/toPlainObject';
+import { EmployeeModel } from '../employee/employee.model';
+import { LeaveModel } from '../leave/leave.model';
+import mongoose from 'mongoose';
 
 export const attendanceService = {
   async checkIn(employeeId: string, checkInTime?: Date): Promise<Attendance> {
@@ -47,6 +50,8 @@ export const attendanceService = {
     }
 
     const checkOut = checkOutTime || new Date();
+    
+    // Calculate total time worked
     const hoursWorked = (checkOut.getTime() - attendance.checkIn.getTime()) / (1000 * 60 * 60);
 
     attendance.checkOut = checkOut;
@@ -70,18 +75,191 @@ export const attendanceService = {
     return toPlainObjectArray<Attendance>(attendances);
   },
 
-  async getAllAttendance(startDate?: Date, endDate?: Date): Promise<Attendance[]> {
+  async getMonthlyAttendance(employeeId: string, month: number, year: number): Promise<{
+    attendances: Attendance[];
+    summary: {
+      totalDays: number;
+      presentDays: number;
+      absentDays: number;
+      leaveDays: number;
+      payableDays: number;
+      totalHours: number;
+    };
+  }> {
+    
+    // Calculate date range for the month
+    const startDate = new Date(year, month - 1, 1);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(year, month, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Convert employeeId to ObjectId if it's a string
+    const employeeObjectId = mongoose.Types.ObjectId.isValid(employeeId) 
+      ? new mongoose.Types.ObjectId(employeeId) 
+      : employeeId;
+
+    // Get all attendance records for the month
+    const attendances = await AttendanceModel.find({
+      employeeId: employeeObjectId,
+      date: { $gte: startDate, $lte: endDate },
+    })
+      .sort({ date: 1 })
+      .populate('employeeId', 'firstName lastName employeeId');
+
+    // Get approved leaves for the month
+    const leaves = await LeaveModel.find({
+      employeeId: employeeObjectId,
+      startDate: { $lte: endDate },
+      endDate: { $gte: startDate },
+      status: 'approved',
+    });
+
+    // Calculate summary
+    const totalDays = endDate.getDate(); // Days in the month
+    const presentDays = attendances.filter(a => a.status === 'present' || a.status === 'late').length;
+    const absentDays = attendances.filter(a => a.status === 'absent').length;
+    
+    // Calculate leave days (overlapping with the month)
+    let leaveDays = 0;
+    leaves.forEach(leave => {
+      const leaveStart = new Date(leave.startDate);
+      const leaveEnd = new Date(leave.endDate);
+      const monthStart = new Date(startDate);
+      const monthEnd = new Date(endDate);
+      
+      const overlapStart = leaveStart > monthStart ? leaveStart : monthStart;
+      const overlapEnd = leaveEnd < monthEnd ? leaveEnd : monthEnd;
+      
+      if (overlapStart <= overlapEnd) {
+        const days = Math.ceil((overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        leaveDays += days;
+      }
+    });
+
+    // Calculate payable days: present days + approved leave days
+    // Absent days and missing attendance reduce payable days
+    const missingDays = totalDays - attendances.length - leaveDays;
+    const payableDays = presentDays + leaveDays;
+
+    // Calculate total hours
+    const totalHours = attendances.reduce((sum, a) => sum + (a.hoursWorked || 0), 0);
+
+    return {
+      attendances: toPlainObjectArray<Attendance>(attendances),
+      summary: {
+        totalDays,
+        presentDays,
+        absentDays,
+        leaveDays,
+        payableDays,
+        totalHours: Math.round(totalHours * 100) / 100,
+      },
+    };
+  },
+
+  async getAllAttendance(startDate?: Date, endDate?: Date): Promise<any[]> {
     const query: any = {};
 
     if (startDate && endDate) {
       query.date = { $gte: startDate, $lte: endDate };
+    } else if (startDate) {
+      // If only startDate is provided, treat it as a specific date
+      const dateStart = new Date(startDate);
+      dateStart.setHours(0, 0, 0, 0);
+      const dateEnd = new Date(startDate);
+      dateEnd.setHours(23, 59, 59, 999);
+      query.date = { $gte: dateStart, $lte: dateEnd };
     }
 
     const attendances = await AttendanceModel.find(query)
-      .sort({ date: -1 })
-      .populate('employeeId', 'firstName lastName employeeId');
+      .sort({ 'employeeId.firstName': 1 })
+      .populate('employeeId', 'firstName lastName employeeId email');
 
-    return toPlainObjectArray<Attendance>(attendances);
+    // Format response with employee information
+    return attendances.map((attendance: any) => {
+      const plain = toPlainObject<Attendance>(attendance);
+      if (plain) {
+        const employee = attendance.employeeId;
+        if (employee && typeof employee === 'object') {
+          return {
+            ...plain,
+            employeeName: `${employee.firstName || ''} ${employee.lastName || ''}`.trim(),
+            employeeCode: employee.employeeId || '',
+          };
+        }
+      }
+      return plain;
+    }).filter(Boolean);
+  },
+
+  async getAttendanceStatistics(date: Date): Promise<{
+    total: number;
+    present: number;
+    absent: number;
+    onLeave: number;
+    notApplied: number;
+  }> {
+
+    const dateStart = new Date(date);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(date);
+    dateEnd.setHours(23, 59, 59, 999);
+
+    // Get all active employees
+    const totalEmployees = await EmployeeModel.countDocuments({ status: 'active' });
+
+    // Get attendance records for the date
+    const attendances = await AttendanceModel.find({
+      date: { $gte: dateStart, $lte: dateEnd },
+    });
+
+    const present = attendances.filter(a => a.status === 'present' || a.status === 'late').length;
+    const absent = attendances.filter(a => a.status === 'absent').length;
+
+    // Get employees on leave for this date
+    const leaves = await LeaveModel.find({
+      startDate: { $lte: dateEnd },
+      endDate: { $gte: dateStart },
+      status: 'approved',
+    });
+
+    const onLeave = leaves.length;
+
+    // Get employee IDs who have attendance records
+    const employeeIdsWithAttendance = new Set(
+      attendances.map(a => a.employeeId.toString())
+    );
+
+    // Get employee IDs on leave
+    const employeeIdsOnLeave = new Set(
+      leaves.map(l => l.employeeId.toString())
+    );
+
+    // Count employees with attendance records (excluding those on leave)
+    const employeesWithAttendance = attendances.filter(
+      a => !employeeIdsOnLeave.has(a.employeeId.toString())
+    ).length;
+
+    // Count employees without any record (not on leave and no attendance)
+    const allEmployeeIds = new Set([
+      ...Array.from(employeeIdsWithAttendance),
+      ...Array.from(employeeIdsOnLeave),
+    ]);
+
+    const employeesWithRecords = await EmployeeModel.countDocuments({
+      _id: { $in: Array.from(allEmployeeIds) },
+      status: 'active',
+    });
+
+    const notApplied = Math.max(0, totalEmployees - employeesWithRecords);
+
+    return {
+      total: totalEmployees,
+      present,
+      absent,
+      onLeave,
+      notApplied: Math.max(0, notApplied),
+    };
   },
 
   async updateAttendance(attendanceId: string, data: Partial<Attendance>): Promise<Attendance | null> {

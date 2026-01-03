@@ -1,7 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { Leave } from '../../types';
 
-export interface LeaveDocument extends Omit<Leave, '_id' | 'createdAt' | 'updatedAt'>, Document {}
+export interface LeaveDocument extends Omit<Leave, '_id' | 'createdAt' | 'updatedAt'>, Document {
+  _id: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const leaveSchema = new Schema<LeaveDocument>({
     employeeId: {

@@ -1,7 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { Employee } from '../../types';
 
-export interface EmployeeDocument extends Omit<Employee, '_id' | 'createdAt' | 'updatedAt'>, Document {}
+export interface EmployeeDocument extends Omit<Employee, '_id' | 'createdAt' | 'updatedAt'>, Document {
+  _id: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const employeeSchema = new Schema<EmployeeDocument>({
     employeeId: {

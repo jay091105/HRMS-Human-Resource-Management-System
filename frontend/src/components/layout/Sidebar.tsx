@@ -47,11 +47,10 @@ const ProfileIcon = () => (
 
 const navItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
-  { path: '/dashboard/employees', label: 'Employees', icon: <EmployeesIcon />, adminOnly: true },
   { path: '/dashboard/attendance', label: 'Attendance', icon: <AttendanceIcon /> },
-  { path: '/dashboard/leave', label: 'Leave', icon: <LeaveIcon /> },
+  { path: '/dashboard/employees', label: 'Employees', icon: <EmployeesIcon />, adminOnly: true },
   { path: '/dashboard/payroll', label: 'Payroll', icon: <PayrollIcon /> },
-  { path: '/dashboard/profile', label: 'My Profile', icon: <ProfileIcon /> },
+  { path: '/dashboard/profile', label: 'Profile', icon: <ProfileIcon /> },
 ];
 
 export const Sidebar: React.FC = () => {

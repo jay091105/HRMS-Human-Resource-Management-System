@@ -1,7 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { Attendance } from '../../types';
 
-export interface AttendanceDocument extends Omit<Attendance, '_id' | 'createdAt' | 'updatedAt'>, Document {}
+export interface AttendanceDocument extends Omit<Attendance, '_id' | 'createdAt' | 'updatedAt'>, Document {
+  _id: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const attendanceSchema = new Schema<AttendanceDocument>({
     employeeId: {
@@ -27,6 +31,10 @@ const attendanceSchema = new Schema<AttendanceDocument>({
     },
     hoursWorked: {
       type: Number,
+    },
+    extraHours: {
+      type: Number,
+      default: 0,
     },
     notes: {
       type: String,

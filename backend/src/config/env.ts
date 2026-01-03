@@ -10,4 +10,3 @@ export const config = {
   jwtExpiresIn: (process.env.JWT_EXPIRES_IN || '7d') as string,
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
 };
-

@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
+import { ErrorRequestHandler } from 'express';
 
-export const errorMiddleware = (
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const errorMiddleware: ErrorRequestHandler = (
+  err,
+  req,
+  res,
+  next
+) => {
   console.error('Error:', err);
 
   res.status(500).json({

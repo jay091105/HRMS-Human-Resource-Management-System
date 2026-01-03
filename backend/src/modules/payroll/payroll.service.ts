@@ -1,7 +1,8 @@
 import { PayrollModel } from './payroll.model';
 import { Payroll } from '../../types';
-import { calculateMonthlySalary } from '../../utils/salaryCalculator';
+import { calculateMonthlySalary, calculateSalaryWithAttendance } from '../../utils/salaryCalculator';
 import { EmployeeModel } from '../employee/employee.model';
+import { attendanceService } from '../attendance/attendance.service';
 import { toPlainObject, toPlainObjectArray } from '../../utils/toPlainObject';
 
 export const payrollService = {
@@ -11,14 +12,35 @@ export const payrollService = {
     year: number,
     allowances: number = 0,
     deductions: number = 0,
-    bonus: number = 0
+    bonus: number = 0,
+    useAttendance: boolean = true
   ): Promise<Payroll> {
     const employee = await EmployeeModel.findById(employeeId);
     if (!employee) {
       throw new Error('Employee not found');
     }
 
-    const salaryData = calculateMonthlySalary(employee.salary, allowances, deductions, bonus);
+    let salaryData: Payroll;
+
+    if (useAttendance) {
+      // Get attendance data for the month
+      const attendanceData = await attendanceService.getMonthlyAttendance(employeeId, month, year);
+      const totalDaysInMonth = attendanceData.summary.totalDays;
+      const payableDays = attendanceData.summary.payableDays;
+
+      // Calculate salary based on attendance
+      salaryData = calculateSalaryWithAttendance(
+        employee.salary,
+        payableDays,
+        totalDaysInMonth,
+        allowances,
+        deductions,
+        bonus
+      );
+    } else {
+      // Use standard monthly calculation
+      salaryData = calculateMonthlySalary(employee.salary, allowances, deductions, bonus);
+    }
 
     const payroll = await PayrollModel.create({
       employeeId,
