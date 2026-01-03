@@ -40,5 +40,18 @@ export const employeeService = {
   async deleteEmployee(id: string): Promise<void> {
     await api.delete(`/employees/${id}`);
   },
+
+  async checkProfileExists(): Promise<boolean> {
+    try {
+      await this.getMyProfile();
+      return true;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return false;
+      }
+      // For other errors, assume profile exists to avoid blocking
+      return true;
+    }
+  },
 };
 

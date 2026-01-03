@@ -101,16 +101,17 @@ export const AdminAttendanceView: React.FC = () => {
   };
 
   const formatTimeWorked = (hours?: number): string => {
-    if (!hours || hours === 0) return '--';
+    if (hours === undefined || hours === null) return '--';
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     if (h > 0 && m > 0) {
-      return `${h}h ${m}m`;
+      return `${h} ${h === 1 ? 'hour' : 'hours'} ${m} ${m === 1 ? 'minute' : 'minutes'}`;
     } else if (h > 0) {
-      return `${h}h`;
-    } else {
-      return `${m}m`;
+      return `${h} ${h === 1 ? 'hour' : 'hours'}`;
+    } else if (m > 0) {
+      return `${m} ${m === 1 ? 'minute' : 'minutes'}`;
     }
+    return '0 hours';
   };
 
   const getStatusBadge = (status?: string) => {
@@ -377,12 +378,7 @@ export const AdminAttendanceView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-<<<<<<< Updated upstream
-                        <span className={`text-sm ${attendance.hoursWorked && attendance.hoursWorked > 0 ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-                          {attendance.checkOut ? formatTimeWorked(attendance.hoursWorked) : '--'}
-                        </span>
-=======
-                        {attendance.checkOut && attendance.checkIn && attendance.hoursWorked ? (
+                        {attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null ? (
                           <div className="text-sm">
                             <div className="text-gray-600">
                               {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
@@ -391,10 +387,11 @@ export const AdminAttendanceView: React.FC = () => {
                               = {formatTimeWorked(attendance.hoursWorked)}
                             </div>
                           </div>
+                        ) : attendance.checkIn && !attendance.checkOut ? (
+                          <span className="text-sm text-gray-500">Still working...</span>
                         ) : (
                           <span className="text-sm text-gray-400">--</span>
                         )}
->>>>>>> Stashed changes
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(attendance.status)}

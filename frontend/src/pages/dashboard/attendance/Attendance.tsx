@@ -128,16 +128,17 @@ export const AttendancePage: React.FC = () => {
   const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   const formatTimeWorked = (hours?: number): string => {
-    if (!hours || hours === 0) return '--';
+    if (hours === undefined || hours === null) return '--';
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     if (h > 0 && m > 0) {
-      return `${h}h ${m}m`;
+      return `${h} ${h === 1 ? 'hour' : 'hours'} ${m} ${m === 1 ? 'minute' : 'minutes'}`;
     } else if (h > 0) {
-      return `${h}h`;
-    } else {
-      return `${m}m`;
+      return `${h} ${h === 1 ? 'hour' : 'hours'}`;
+    } else if (m > 0) {
+      return `${m} ${m === 1 ? 'minute' : 'minutes'}`;
     }
+    return '0 hours';
   };
 
   const getStatusBadge = (status?: string) => {
@@ -232,127 +233,11 @@ export const AttendancePage: React.FC = () => {
                   {todayAttendance.checkIn ? formatTime(todayAttendance.checkIn) : '--'}
                 </p>
               </div>
-<<<<<<< Updated upstream
               <div className="bg-green-50 rounded-lg p-2.5">
                 <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-=======
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            My Attendance - {currentMonth}
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Day-wise attendance for the current month
-          </p>
-        </div>
-        <Button
-          onClick={() => setShowMonthlyView(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          View Monthly Report
-        </Button>
-      </div>
-
-      {attendances.length > 0 ? (
-        <div className="space-y-4">
-          {/* Day-wise list view for better month overview */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-blue-600">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Check In
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Check Out
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Hours Worked
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {attendances
-                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                    .map((attendance) => (
-                      <tr key={attendance._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {new Date(attendance.date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`text-sm ${attendance.checkIn ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                            {attendance.checkIn ? formatTime(attendance.checkIn) : '--'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`text-sm ${attendance.checkOut ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                            {attendance.checkOut ? formatTime(attendance.checkOut) : '--'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {attendance.checkOut && attendance.checkIn && attendance.hoursWorked ? (
-                            <div className="text-sm">
-                              <div className="text-gray-600">
-                                {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
-                              </div>
-                              <div className="text-green-600 font-medium mt-1">
-                                = {(() => {
-                                  const hours = Math.floor(attendance.hoursWorked);
-                                  const minutes = Math.round((attendance.hoursWorked % 1) * 60);
-                                  if (hours > 0 && minutes > 0) {
-                                    return `${hours}h ${minutes}m`;
-                                  } else if (hours > 0) {
-                                    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
-                                  } else if (minutes > 0) {
-                                    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
-                                  }
-                                  return '0 hours';
-                                })()}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-400">--</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              attendance.status === 'present'
-                                ? 'bg-green-100 text-green-800'
-                                : attendance.status === 'late'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : attendance.status === 'absent'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {attendance.status || 'N/A'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
->>>>>>> Stashed changes
             </div>
           </div>
 
@@ -372,13 +257,16 @@ export const AttendancePage: React.FC = () => {
             </div>
           </div>
 
-          {todayAttendance.hoursWorked && (
+          {todayAttendance.hoursWorked && todayAttendance.checkOut && (
             <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hours Worked</p>
                   <p className="text-xl font-semibold text-gray-900 mt-2">
-                    {formatTimeWorked(todayAttendance.hoursWorked)}
+                    {formatTime(todayAttendance.checkIn)} to {formatTime(todayAttendance.checkOut)}
+                  </p>
+                  <p className="text-sm text-green-600 font-medium mt-1">
+                    = {formatTimeWorked(todayAttendance.hoursWorked)}
                   </p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-2.5">
@@ -454,9 +342,20 @@ export const AttendancePage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm ${attendance.hoursWorked ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-                          {attendance.hoursWorked ? formatTimeWorked(attendance.hoursWorked) : '--'}
-                        </span>
+                        {attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null ? (
+                          <div className="text-sm">
+                            <div className="text-gray-600">
+                              {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
+                            </div>
+                            <div className="text-green-600 font-medium mt-1">
+                              = {formatTimeWorked(attendance.hoursWorked)}
+                            </div>
+                          </div>
+                        ) : attendance.checkIn && !attendance.checkOut ? (
+                          <span className="text-sm text-gray-500">Still working...</span>
+                        ) : (
+                          <span className="text-sm text-gray-400">--</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(attendance.status)}

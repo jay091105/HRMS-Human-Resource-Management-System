@@ -67,11 +67,11 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
   };
 
   const formatTimeWorked = (hours?: number): string => {
-    if (!hours || hours === 0) return '--';
+    if (hours === undefined || hours === null) return '--';
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     if (h > 0 && m > 0) {
-      return `${h}h ${m}m`;
+      return `${h} ${h === 1 ? 'hour' : 'hours'} ${m} ${m === 1 ? 'minute' : 'minutes'}`;
     } else if (h > 0) {
       return `${h} ${h === 1 ? 'hour' : 'hours'}`;
     } else if (m > 0) {
@@ -271,7 +271,7 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {attendance.checkOut && attendance.checkIn && attendance.hoursWorked ? (
+                          {attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null ? (
                             <div className="text-sm">
                               <div className="text-gray-600">
                                 {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
@@ -280,6 +280,8 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
                                 = {formatTimeWorked(attendance.hoursWorked)}
                               </div>
                             </div>
+                          ) : attendance.checkIn && !attendance.checkOut ? (
+                            <span className="text-sm text-gray-500">Still working...</span>
                           ) : (
                             <span className="text-sm text-gray-400">--</span>
                           )}
