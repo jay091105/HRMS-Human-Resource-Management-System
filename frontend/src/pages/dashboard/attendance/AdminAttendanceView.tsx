@@ -377,9 +377,24 @@ export const AdminAttendanceView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+<<<<<<< Updated upstream
                         <span className={`text-sm ${attendance.hoursWorked && attendance.hoursWorked > 0 ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
                           {attendance.checkOut ? formatTimeWorked(attendance.hoursWorked) : '--'}
                         </span>
+=======
+                        {attendance.checkOut && attendance.checkIn && attendance.hoursWorked ? (
+                          <div className="text-sm">
+                            <div className="text-gray-600">
+                              {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
+                            </div>
+                            <div className="text-green-600 font-medium mt-1">
+                              = {formatTimeWorked(attendance.hoursWorked)}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">--</span>
+                        )}
+>>>>>>> Stashed changes
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(attendance.status)}

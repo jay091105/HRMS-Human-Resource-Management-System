@@ -271,9 +271,18 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`text-sm ${attendance.hoursWorked && attendance.checkOut ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                            {attendance.checkOut ? formatTimeWorked(attendance.hoursWorked) : '--'}
-                          </span>
+                          {attendance.checkOut && attendance.checkIn && attendance.hoursWorked ? (
+                            <div className="text-sm">
+                              <div className="text-gray-600">
+                                {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
+                              </div>
+                              <div className="text-green-600 font-medium mt-1">
+                                = {formatTimeWorked(attendance.hoursWorked)}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">--</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(attendance.status)}

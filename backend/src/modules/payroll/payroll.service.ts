@@ -90,6 +90,23 @@ export const payrollService = {
 
   async updatePayroll(payrollId: string, data: Partial<Payroll>): Promise<Payroll | null> {
     const payroll = await PayrollModel.findByIdAndUpdate(payrollId, data, { new: true });
+    
+    // If baseSalary is updated, update the employee's annual salary and monthly wage
+    if (data.baseSalary && payroll) {
+      const employeeId = typeof payroll.employeeId === 'string' 
+        ? payroll.employeeId 
+        : (payroll.employeeId as any)?._id?.toString() || payroll.employeeId;
+      
+      // Calculate annual salary from monthly base salary
+      const annualSalary = data.baseSalary * 12;
+      
+      // Update employee's salary and monthly wage
+      await EmployeeModel.findByIdAndUpdate(employeeId, { 
+        salary: annualSalary,
+        monthlyWage: data.baseSalary
+      });
+    }
+    
     return toPlainObject<Payroll>(payroll);
   },
 
