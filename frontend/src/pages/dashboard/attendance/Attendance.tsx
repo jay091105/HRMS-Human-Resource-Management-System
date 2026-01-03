@@ -183,22 +183,11 @@ export const AttendancePage: React.FC = () => {
                 {todayAttendance.checkOut ? new Date(todayAttendance.checkOut).toLocaleTimeString() : 'Not checked out'}
               </p>
             </div>
-            {todayAttendance.hoursWorked && todayAttendance.checkOut && (
+            {todayAttendance.hoursWorked && (
               <div className="bg-blue-50 rounded-lg p-3">
                 <span className="text-blue-600 text-xs font-medium">Hours Worked</span>
                 <p className="text-gray-900 font-semibold mt-1">
-                  {(() => {
-                    const hours = Math.floor(todayAttendance.hoursWorked);
-                    const minutes = Math.round((todayAttendance.hoursWorked % 1) * 60);
-                    if (hours > 0 && minutes > 0) {
-                      return `${hours}h ${minutes}m`;
-                    } else if (hours > 0) {
-                      return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
-                    } else if (minutes > 0) {
-                      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
-                    }
-                    return '0 hours';
-                  })()}
+                  {Math.floor(todayAttendance.hoursWorked)}h {Math.round((todayAttendance.hoursWorked % 1) * 60)}m
                 </p>
               </div>
             )}
@@ -272,19 +261,8 @@ export const AttendancePage: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`text-sm ${attendance.hoursWorked ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                            {attendance.hoursWorked && attendance.checkOut
-                              ? (() => {
-                                  const hours = Math.floor(attendance.hoursWorked);
-                                  const minutes = Math.round((attendance.hoursWorked % 1) * 60);
-                                  if (hours > 0 && minutes > 0) {
-                                    return `${hours}h ${minutes}m`;
-                                  } else if (hours > 0) {
-                                    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
-                                  } else if (minutes > 0) {
-                                    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
-                                  }
-                                  return '0 hours';
-                                })()
+                            {attendance.hoursWorked
+                              ? `${Math.floor(attendance.hoursWorked)}:${String(Math.round((attendance.hoursWorked % 1) * 60)).padStart(2, '0')}`
                               : '--'}
                           </span>
                         </td>

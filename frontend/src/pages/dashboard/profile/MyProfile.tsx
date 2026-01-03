@@ -8,6 +8,7 @@ import { useRole } from '../../../hooks/useRole';
 import { formatDate } from '../../../utils/formatDate';
 import { StatusDot } from '../../../components/ui/StatusDot';
 import { ChangePasswordForm } from '../../../components/forms/ChangePasswordForm';
+import { ProfileForm } from '../../../components/forms/ProfileForm';
 import { authService } from '../../../services/auth.service';
 
 type TabType = 'resume' | 'private' | 'salary' | 'security';
@@ -20,6 +21,7 @@ export const MyProfile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('resume');
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,6 +156,32 @@ export const MyProfile: React.FC = () => {
     }
   };
 
+  const handleCreateProfile = async (data: Partial<Employee>) => {
+    try {
+      const profileData = {
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        email: user?.email || data.email || '',
+        phone: data.phone || '',
+        department: data.department || '',
+        position: data.position || '',
+        hireDate: data.hireDate || new Date().toISOString(),
+        salary: data.salary || 0,
+        status: 'active' as const,
+        address: data.address || '',
+      };
+      const created = await employeeService.createMyProfile(profileData);
+      setEmployee(created);
+      setShowCreateModal(false);
+      setError('');
+      setSuccess('Profile created successfully');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to create profile');
+      throw err;
+    }
+  };
+
   const handleUpdate = async (data: Partial<Employee>) => {
     try {
       const updated = await employeeService.updateMyProfile({
@@ -243,11 +271,36 @@ export const MyProfile: React.FC = () => {
                 You need to create your employee profile to access all features.
               </p>
             </div>
-            <Button onClick={() => window.location.href = '/dashboard'}>
-              Go to Dashboard
+            <Button onClick={() => setShowCreateModal(true)}>
+              Create My Profile
             </Button>
           </div>
         </div>
+
+        <Modal
+          isOpen={showCreateModal}
+          onClose={() => {
+            setShowCreateModal(false);
+            setError('');
+          }}
+          title="Create Employee Profile"
+        >
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+          <ProfileForm
+            initialData={{
+              email: user?.email || '',
+            } as Employee}
+            onSubmit={handleCreateProfile}
+            onCancel={() => {
+              setShowCreateModal(false);
+              setError('');
+            }}
+          />
+        </Modal>
       </div>
     );
   }

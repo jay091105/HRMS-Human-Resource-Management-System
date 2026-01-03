@@ -114,11 +114,10 @@ export const AdminAttendanceView: React.FC = () => {
     if (h > 0 && m > 0) {
       return `${h}h ${m}m`;
     } else if (h > 0) {
-      return `${h} ${h === 1 ? 'hour' : 'hours'}`;
-    } else if (m > 0) {
-      return `${m} ${m === 1 ? 'minute' : 'minutes'}`;
+      return `${h}h`;
+    } else {
+      return `${m}m`;
     }
-    return '0 hours';
   };
 
   const getStatusBadge = (status?: string) => {
