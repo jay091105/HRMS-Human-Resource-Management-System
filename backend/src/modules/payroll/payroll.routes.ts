@@ -2,15 +2,16 @@ import { Router } from 'express';
 import { payrollController } from './payroll.controller';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { roleMiddleware } from '../../middlewares/role.middleware';
+import { profileMiddleware } from '../../middlewares/profile.middleware';
 
 const router = Router();
 
 // All routes require authentication
 router.use(authMiddleware);
 
-// Employee routes
-router.get('/me', payrollController.getMyPayrolls);
-router.get('/:id', payrollController.getPayroll);
+// Employee routes (require profile)
+router.get('/me', profileMiddleware, payrollController.getMyPayrolls);
+router.get('/:id', profileMiddleware, payrollController.getPayroll);
 
 // Admin routes
 router.post('/', roleMiddleware(['admin']), payrollController.createPayroll);

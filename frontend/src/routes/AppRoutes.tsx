@@ -86,7 +86,7 @@ export const AppRoutes: React.FC = () => {
       <Route
         path="/dashboard/profile"
         element={
-          <ProtectedRoute skipProfileCheck>
+          <ProtectedRoute requireProfile={false}>
             <MyProfile />
           </ProtectedRoute>
         }

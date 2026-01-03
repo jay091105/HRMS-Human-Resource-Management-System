@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { attendanceService } from '../../../services/attendance.service';
 import { AttendanceWithEmployee } from '../../../types/attendance';
 import { formatTime, getDateString } from '../../../utils/formatDate';
@@ -16,8 +15,6 @@ interface AttendanceStatistics {
 }
 
 export const AdminAttendanceView: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const statusFilter = searchParams.get('filter') || '';
   const [allEmployees, setAllEmployees] = useState<AttendanceWithEmployee[]>([]);
   const [filteredAttendances, setFilteredAttendances] = useState<AttendanceWithEmployee[]>([]);
   const [statistics, setStatistics] = useState<AttendanceStatistics>({
@@ -41,34 +38,18 @@ export const AdminAttendanceView: React.FC = () => {
   }, [selectedDate]);
 
   useEffect(() => {
-    let filtered = allEmployees;
-    
-    // Apply status filter from URL
-    if (statusFilter) {
-      if (statusFilter === 'present') {
-        filtered = filtered.filter(emp => emp.status === 'present' || emp.status === 'late');
-      } else if (statusFilter === 'absent') {
-        filtered = filtered.filter(emp => emp.status === 'absent');
-      } else if (statusFilter === 'on-leave') {
-        // Filter employees on leave (they might have status as string or be identified differently)
-        filtered = filtered.filter(emp => (emp.status as string) === 'on-leave' || (emp.status as string) === 'On Leave');
-      } else if (statusFilter === 'not-applied') {
-        filtered = filtered.filter(emp => !emp.status || (emp.status as string) === 'not-applied');
-      }
-    }
-    
-    // Apply search query filter
-    if (searchQuery.trim() !== '') {
+    if (searchQuery.trim() === '') {
+      setFilteredAttendances(allEmployees);
+    } else {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
+      const filtered = allEmployees.filter(
         (emp) =>
           emp.employeeName?.toLowerCase().includes(query) ||
           emp.employeeCode?.toLowerCase().includes(query)
       );
+      setFilteredAttendances(filtered);
     }
-    
-    setFilteredAttendances(filtered);
-  }, [searchQuery, allEmployees, statusFilter]);
+  }, [searchQuery, allEmployees]);
 
   const fetchData = async () => {
     try {
@@ -119,24 +100,18 @@ export const AdminAttendanceView: React.FC = () => {
     setSelectedDate(new Date());
   };
 
-  const formatTimeWorked = (hours?: number, hasCheckOut?: boolean): string => {
-    // If check-out is missing, show "Incomplete"
-    if (hasCheckOut === false) {
-      return 'Incomplete';
-    }
-    // If hours is 0 or undefined, show 0h if checked out, otherwise Incomplete
-    if (!hours || hours === 0) {
-      return hasCheckOut ? '0h' : 'Incomplete';
-    }
+  const formatTimeWorked = (hours?: number): string => {
+    if (hours === undefined || hours === null) return '--';
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     if (h > 0 && m > 0) {
-      return `${h}h ${m}m`;
+      return `${h} ${h === 1 ? 'hour' : 'hours'} ${m} ${m === 1 ? 'minute' : 'minutes'}`;
     } else if (h > 0) {
-      return `${h}h`;
-    } else {
-      return `${m}m`;
+      return `${h} ${h === 1 ? 'hour' : 'hours'}`;
+    } else if (m > 0) {
+      return `${m} ${m === 1 ? 'minute' : 'minutes'}`;
     }
+    return '0 hours';
   };
 
   const getStatusBadge = (status?: string) => {
@@ -204,28 +179,6 @@ export const AdminAttendanceView: React.FC = () => {
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-800">{error}</p>
-        </div>
-      )}
-
-      {/* Status Filter Badge */}
-      {statusFilter && (
-        <div className="mb-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg">
-            <span className="text-sm font-medium">
-              Filter: {statusFilter === 'present' ? 'Present' : statusFilter === 'absent' ? 'Absent' : statusFilter === 'on-leave' ? 'On Leave' : 'Not Applied'}
-            </span>
-            <button
-              onClick={() => {
-                searchParams.delete('filter');
-                setSearchParams(searchParams);
-              }}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
         </div>
       )}
 
@@ -365,28 +318,6 @@ export const AdminAttendanceView: React.FC = () => {
         </div>
       </div>
 
-      {/* Date Display and Company Total Hours */}
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-lg font-semibold text-gray-700">
-          {selectedDate.toLocaleDateString('en-US', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-          })}
-        </p>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-          <p className="text-sm text-gray-600">Total Company Hours</p>
-          <p className="text-xl font-bold text-blue-700">
-            {formatTimeWorked(
-              filteredAttendances
-                .filter(att => att.checkOut && att.hoursWorked)
-                .reduce((sum, att) => sum + (att.hoursWorked || 0), 0),
-              true
-            )}
-          </p>
-        </div>
-      </div>
-
       {/* Attendance Table */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
@@ -447,38 +378,42 @@ export const AdminAttendanceView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm ${attendance.hoursWorked && attendance.hoursWorked > 0 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                          {attendance.checkOut ? formatTimeWorked(attendance.hoursWorked) : '--'}
-                        </span>
+                        {attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null ? (
+                          <div className="text-sm">
+                            <div className="text-gray-600">
+                              {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
+                            </div>
+                            <div className="text-green-600 font-medium mt-1">
+                              = {formatTimeWorked(attendance.hoursWorked)}
+                            </div>
+                          </div>
+                        ) : attendance.checkIn && !attendance.checkOut ? (
+                          <span className="text-sm text-gray-500">Still working...</span>
+                        ) : (
+                          <span className="text-sm text-gray-400">--</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(attendance.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              const empId = attendance.employeeId;
-                              if (empId) {
-                                console.log('Opening monthly report for employee:', empId, employeeName);
-                                const empIdString = typeof empId === 'string' ? empId : String(empId);
-                                setSelectedEmployeeForMonthly({
-                                  employeeId: empIdString,
-                                  employeeName: employeeName,
-                                });
-                              } else {
-                                console.error('Employee ID not found in attendance:', attendance);
-                                setError('Employee ID not found. Please refresh the page.');
-                              }
-                            }}
-                            className="text-blue-600 hover:text-blue-900 flex items-center gap-1 px-2 py-1 rounded hover:bg-blue-50"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            <span>Attendance</span>
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => {
+                            const empId = attendance.employeeId;
+                            if (empId) {
+                              const employeeIdStr = typeof empId === 'string' ? empId : String(empId);
+                              setSelectedEmployeeForMonthly({
+                                employeeId: employeeIdStr,
+                                employeeName: employeeName,
+                              });
+                            } else {
+                              setError('Employee ID not found. Please refresh the page.');
+                            }
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        >
+                          View
+                        </button>
                       </td>
                     </tr>
                   );
