@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { employeeService } from '../../../services/employee.service';
+import { payrollService } from '../../../services/payroll.service';
 import { Employee } from '../../../types/employee';
+import { Payroll } from '../../../types/payroll';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { useAuth } from '../../../hooks/useAuth';
@@ -25,6 +27,7 @@ export const MyProfile: React.FC = () => {
   const [success, setSuccess] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profilePicture, setProfilePicture] = useState<string>('');
+  const [latestPayroll, setLatestPayroll] = useState<Payroll | null>(null);
 
   // Salary Info State
   const [salaryData, setSalaryData] = useState({
@@ -84,6 +87,25 @@ export const MyProfile: React.FC = () => {
         if (data.skills) setAdditionalInfo(prev => ({ ...prev, skills: data.skills! }));
         if (data.certifications) setAdditionalInfo(prev => ({ ...prev, certifications: data.certifications! }));
         setError('');
+        
+        // Fetch latest payroll for current month
+        if (data._id) {
+          try {
+            const now = new Date();
+            const payrolls = await payrollService.getMyPayrolls(now.getMonth() + 1, now.getFullYear());
+            if (payrolls.length > 0) {
+              // Get the most recent payroll
+              const sorted = payrolls.sort((a, b) => {
+                if (a.year !== b.year) return b.year - a.year;
+                return b.month - a.month;
+              });
+              setLatestPayroll(sorted[0]);
+            }
+          } catch (err: any) {
+            // Silently fail if payroll doesn't exist
+            console.log('No payroll found for current month');
+          }
+        }
       } catch (err: any) {
         if (err.response?.status === 404) {
           setEmployee(null);
@@ -632,6 +654,59 @@ export const MyProfile: React.FC = () => {
 
         {activeTab === 'salary' && (isAdmin || employee.userId === user?.id) && (
           <div className="space-y-6">
+            {/* Current Month Payroll Summary */}
+            {latestPayroll && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Month Salary Breakdown</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Base Salary</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      ₹{(latestPayroll.baseSalary || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Allowances</p>
+                    <p className="text-lg font-bold text-green-600">
+                      +₹{(latestPayroll.allowances || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Deductions</p>
+                    <p className="text-lg font-bold text-red-600">
+                      -₹{(latestPayroll.deductions || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Bonus</p>
+                    <p className="text-lg font-bold text-green-600">
+                      +₹{(latestPayroll.bonus || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Total Salary</p>
+                    <p className="text-lg font-bold text-blue-600">
+                      ₹{(latestPayroll.totalSalary || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">
+                      Period: {new Date(latestPayroll.year, latestPayroll.month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      latestPayroll.status === 'paid' ? 'bg-green-100 text-green-800' :
+                      latestPayroll.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {latestPayroll.status?.charAt(0).toUpperCase() + latestPayroll.status?.slice(1) || 'Pending'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Wage Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>

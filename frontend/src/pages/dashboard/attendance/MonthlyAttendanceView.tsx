@@ -271,20 +271,38 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null ? (
-                            <div className="text-sm">
-                              <div className="text-gray-600">
-                                {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
-                              </div>
-                              <div className="text-green-600 font-medium mt-1">
-                                = {formatTimeWorked(attendance.hoursWorked)}
-                              </div>
-                            </div>
-                          ) : attendance.checkIn && !attendance.checkOut ? (
-                            <span className="text-sm text-gray-500">Still working...</span>
-                          ) : (
-                            <span className="text-sm text-gray-400">--</span>
-                          )}
+                          {(() => {
+                            // If check-in and check-out are the same, show "0 hr"
+                            if (attendance.checkIn && attendance.checkOut) {
+                              const checkInTime = new Date(attendance.checkIn).getTime();
+                              const checkOutTime = new Date(attendance.checkOut).getTime();
+                              if (checkInTime === checkOutTime) {
+                                return <span className="text-sm text-gray-600 font-medium">0 hr</span>;
+                              }
+                            }
+                            
+                            // If both check-in and check-out exist and hours worked is calculated
+                            if (attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null && attendance.hoursWorked > 0) {
+                              return (
+                                <div className="text-sm">
+                                  <div className="text-gray-600">
+                                    {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
+                                  </div>
+                                  <div className="text-green-600 font-medium mt-1">
+                                    = {formatTimeWorked(attendance.hoursWorked)}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            
+                            // If check-in exists but no check-out
+                            if (attendance.checkIn && !attendance.checkOut) {
+                              return <span className="text-sm text-gray-500">Still working...</span>;
+                            }
+                            
+                            // Default: show nothing or dash
+                            return <span className="text-sm text-gray-400">--</span>;
+                          })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(attendance.status)}

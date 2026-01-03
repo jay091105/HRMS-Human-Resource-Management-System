@@ -118,9 +118,19 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome back! Here's an overview of your HRMS.</p>
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <p className="text-gray-600">Welcome back! Here's an overview of your HRMS.</p>
+          </div>
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-100">
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium text-blue-900">Live Status</span>
+          </div>
+        </div>
       </div>
 
       {error && (
@@ -130,14 +140,17 @@ export const Dashboard: React.FC = () => {
       )}
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Recent Attendance</h2>
             <button
               onClick={() => navigate('/dashboard/attendance')}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
             >
-              View All →
+              View All
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
           {recentAttendance.length > 0 ? (
@@ -170,14 +183,17 @@ export const Dashboard: React.FC = () => {
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">Recent Leave Requests</h2>
             <button
               onClick={() => navigate('/dashboard/leave')}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
             >
-              View All →
+              View All
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
           {recentLeaves.length > 0 ? (
@@ -214,7 +230,7 @@ export const Dashboard: React.FC = () => {
           {/* Attendance Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <div 
-              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => navigate('/dashboard/employees')}
             >
               <div className="flex items-center justify-between">
@@ -231,7 +247,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div 
-              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => navigate('/dashboard/attendance')}
             >
               <div className="flex items-center justify-between">
@@ -248,7 +264,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div 
-              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => navigate('/dashboard/attendance')}
             >
               <div className="flex items-center justify-between">
@@ -265,7 +281,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div 
-              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500 cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => navigate('/dashboard/leave')}
             >
               <div className="flex items-center justify-between">
@@ -282,7 +298,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div 
-              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-gray-500 cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-gray-500 cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => navigate('/dashboard/attendance')}
             >
               <div className="flex items-center justify-between">
@@ -301,10 +317,10 @@ export const Dashboard: React.FC = () => {
 
           {/* Additional Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase">Active Employees</p>
+                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Active Employees</p>
                   <p className="text-3xl font-bold text-gray-900 mt-2">{stats.activeEmployees}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -315,10 +331,10 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase">Pending Requests</p>
+                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Pending Requests</p>
                   <p className="text-3xl font-bold text-gray-900 mt-2">{stats.pendingLeaves}</p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -333,37 +349,45 @@ export const Dashboard: React.FC = () => {
       )}
 
       {!isAdmin && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button
-              variant="primary"
+            <button
               onClick={() => navigate('/dashboard/attendance')}
-              className="w-full"
+              className="flex flex-col items-center justify-center gap-3 p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
             >
-              Mark Attendance
-            </Button>
-            <Button
-              variant="outline"
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-semibold">Mark Attendance</span>
+            </button>
+            <button
               onClick={() => navigate('/dashboard/leave')}
-              className="w-full"
+              className="flex flex-col items-center justify-center gap-3 p-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
             >
-              Apply Leave
-            </Button>
-            <Button
-              variant="outline"
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="font-semibold">Apply Leave</span>
+            </button>
+            <button
               onClick={() => navigate('/dashboard/payroll')}
-              className="w-full"
+              className="flex flex-col items-center justify-center gap-3 p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
             >
-              View Payslip
-            </Button>
-            <Button
-              variant="outline"
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-semibold">View Payslip</span>
+            </button>
+            <button
               onClick={() => navigate('/dashboard/profile')}
-              className="w-full"
+              className="flex flex-col items-center justify-center gap-3 p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
             >
-              Update Profile
-            </Button>
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="font-semibold">Update Profile</span>
+            </button>
           </div>
         </div>
       )}

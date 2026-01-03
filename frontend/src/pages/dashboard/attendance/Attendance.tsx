@@ -83,14 +83,33 @@ export const AttendancePage: React.FC = () => {
     try {
       setError('');
       setSuccess('');
-      await attendanceService.checkOut();
+      const result = await attendanceService.checkOut();
       setSuccess('Checked out successfully!');
       setCanCheckOut(false);
-      const data = await attendanceService.getMyAttendance();
+      setCanCheckIn(false);
+      
+      // Refresh attendance data to show updated hours worked
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const data = await attendanceService.getMyAttendance(
+        getDateString(startOfMonth),
+        getDateString(endOfMonth)
+      );
       setAttendances(data);
+      
+      // Update today's attendance state
+      const today = new Date().toISOString().split('T')[0];
+      const todayAttendance = data.find((a) => a.date.split('T')[0] === today);
+      if (todayAttendance) {
+        setCanCheckOut(false);
+      }
+      
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to check out');
+      console.error('Check-out error:', err);
     }
   };
 
@@ -167,11 +186,11 @@ export const AttendancePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1">My Attendance</h1>
-        <p className="text-sm text-gray-600">Track your daily attendance and working hours</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Attendance</h1>
+        <p className="text-gray-600">Track your daily attendance and working hours</p>
       </div>
 
       {error && (
@@ -188,33 +207,39 @@ export const AttendancePage: React.FC = () => {
 
       {/* Check In/Out Actions */}
       {!isAdmin && (
-        <div className="bg-white rounded-lg shadow-sm p-5 mb-6 border border-gray-200">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-1">Today's Attendance</h3>
-              <p className="text-xs text-gray-500">Mark your attendance for today</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Today's Attendance</h3>
+              <p className="text-sm text-gray-500">Mark your attendance for today</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={handleCheckIn}
                 disabled={!canCheckIn}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
                   canCheckIn
-                    ? 'bg-gray-900 text-white hover:bg-gray-800'
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transform hover:scale-105'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 Check In
               </button>
               <button
                 onClick={handleCheckOut}
                 disabled={!canCheckOut}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
                   canCheckOut
-                    ? 'bg-gray-900 text-white hover:bg-gray-800'
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg transform hover:scale-105'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
                 Check Out
               </button>
             </div>
@@ -224,33 +249,33 @@ export const AttendancePage: React.FC = () => {
 
       {/* Today's Status Cards */}
       {!isAdmin && todayAttendance && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm p-6 border border-green-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Check In</p>
-                <p className="text-xl font-semibold text-gray-900 mt-2">
+                <p className="text-xs font-medium text-green-700 uppercase tracking-wide">Check In</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
                   {todayAttendance.checkIn ? formatTime(todayAttendance.checkIn) : '--'}
                 </p>
               </div>
-              <div className="bg-green-50 rounded-lg p-2.5">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-green-500 rounded-xl p-3 shadow-md">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm p-6 border border-blue-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Check Out</p>
-                <p className="text-xl font-semibold text-gray-900 mt-2">
+                <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Check Out</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
                   {todayAttendance.checkOut ? formatTime(todayAttendance.checkOut) : '--'}
                 </p>
               </div>
-              <div className="bg-blue-50 rounded-lg p-2.5">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-blue-500 rounded-xl p-3 shadow-md">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -258,19 +283,19 @@ export const AttendancePage: React.FC = () => {
           </div>
 
           {todayAttendance.hoursWorked && todayAttendance.checkOut && (
-            <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-sm p-6 border border-purple-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hours Worked</p>
-                  <p className="text-xl font-semibold text-gray-900 mt-2">
+                  <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Hours Worked</p>
+                  <p className="text-lg font-semibold text-gray-700 mt-2">
                     {formatTime(todayAttendance.checkIn)} to {formatTime(todayAttendance.checkOut)}
                   </p>
-                  <p className="text-sm text-green-600 font-medium mt-1">
+                  <p className="text-xl text-purple-600 font-bold mt-2">
                     = {formatTimeWorked(todayAttendance.hoursWorked)}
                   </p>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-2.5">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-purple-500 rounded-xl p-3 shadow-md">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
@@ -281,18 +306,21 @@ export const AttendancePage: React.FC = () => {
       )}
 
       {/* Monthly Attendance Section */}
-      <div className="bg-white rounded-lg shadow-sm p-5 mb-6 border border-gray-200">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-200">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">
               Attendance - {currentMonth}
             </h2>
-            <p className="text-xs text-gray-500">Day-wise attendance for the current month</p>
+            <p className="text-sm text-gray-600">Day-wise attendance for the current month</p>
           </div>
           <button
             onClick={() => setShowMonthlyView(true)}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            className="px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
           >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
             View Monthly Report
           </button>
         </div>
@@ -342,20 +370,38 @@ export const AttendancePage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null ? (
-                          <div className="text-sm">
-                            <div className="text-gray-600">
-                              {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
-                            </div>
-                            <div className="text-green-600 font-medium mt-1">
-                              = {formatTimeWorked(attendance.hoursWorked)}
-                            </div>
-                          </div>
-                        ) : attendance.checkIn && !attendance.checkOut ? (
-                          <span className="text-sm text-gray-500">Still working...</span>
-                        ) : (
-                          <span className="text-sm text-gray-400">--</span>
-                        )}
+                        {(() => {
+                          // If check-in and check-out are the same, show "0 hr"
+                          if (attendance.checkIn && attendance.checkOut) {
+                            const checkInTime = new Date(attendance.checkIn).getTime();
+                            const checkOutTime = new Date(attendance.checkOut).getTime();
+                            if (checkInTime === checkOutTime) {
+                              return <span className="text-sm text-gray-600 font-medium">0 hr</span>;
+                            }
+                          }
+                          
+                          // If both check-in and check-out exist and hours worked is calculated
+                          if (attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null && attendance.hoursWorked > 0) {
+                            return (
+                              <div className="text-sm">
+                                <div className="text-gray-600">
+                                  {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
+                                </div>
+                                <div className="text-green-600 font-medium mt-1">
+                                  = {formatTimeWorked(attendance.hoursWorked)}
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          // If check-in exists but no check-out
+                          if (attendance.checkIn && !attendance.checkOut) {
+                            return <span className="text-sm text-gray-500">Still working...</span>;
+                          }
+                          
+                          // Default: show nothing or dash
+                          return <span className="text-sm text-gray-400">--</span>;
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(attendance.status)}

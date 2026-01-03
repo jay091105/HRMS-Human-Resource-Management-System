@@ -56,8 +56,16 @@ export const attendanceService = {
     const timeDiff = checkOut.getTime() - attendance.checkIn.getTime();
     const hoursWorked = Math.max(0, timeDiff / (1000 * 60 * 60)); // Ensure non-negative
 
+    // Get employee to fetch scheduled shift hours
+    const employee = await EmployeeModel.findById(employeeId);
+    const scheduledShiftHours = (employee as any)?.scheduledShiftHours || 8; // Default 8 hours
+
+    // Calculate extra hours (work hours - scheduled shift)
+    const extraHours = Math.max(0, hoursWorked - scheduledShiftHours);
+
     attendance.checkOut = checkOut;
     attendance.hoursWorked = Math.round(hoursWorked * 100) / 100;
+    attendance.extraHours = Math.round(extraHours * 100) / 100;
 
     await attendance.save();
     return toPlainObject<Attendance>(attendance)!;

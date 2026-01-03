@@ -35,6 +35,13 @@ export const AdminAttendanceView: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    
+    // Refresh data every 30 seconds to get updated checkout times and hours worked
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
   }, [selectedDate]);
 
   useEffect(() => {
@@ -169,11 +176,11 @@ export const AdminAttendanceView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1">Attendance Management</h1>
-        <p className="text-sm text-gray-600">View and manage employee attendance records</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Attendance Management</h1>
+        <p className="text-gray-600">View and manage employee attendance records</p>
       </div>
 
       {error && (
@@ -183,8 +190,8 @@ export const AdminAttendanceView: React.FC = () => {
       )}
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Employees</p>
@@ -198,13 +205,13 @@ export const AdminAttendanceView: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Present</p>
               <p className="text-2xl font-semibold text-gray-900 mt-2">{statistics.present}</p>
             </div>
-            <div className="bg-green-50 rounded-lg p-2.5">
+            <div className="bg-green-50 rounded-xl p-3">
               <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -212,13 +219,13 @@ export const AdminAttendanceView: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Absent</p>
               <p className="text-2xl font-semibold text-gray-900 mt-2">{statistics.absent}</p>
             </div>
-            <div className="bg-red-50 rounded-lg p-2.5">
+            <div className="bg-red-50 rounded-xl p-3">
               <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -226,13 +233,13 @@ export const AdminAttendanceView: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">On Leave</p>
               <p className="text-2xl font-semibold text-gray-900 mt-2">{statistics.onLeave}</p>
             </div>
-            <div className="bg-orange-50 rounded-lg p-2.5">
+            <div className="bg-orange-50 rounded-xl p-3">
               <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -240,13 +247,13 @@ export const AdminAttendanceView: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Not Applied</p>
               <p className="text-2xl font-semibold text-gray-900 mt-2">{statistics.notApplied}</p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2.5">
+            <div className="bg-gray-50 rounded-xl p-3">
               <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -256,7 +263,7 @@ export const AdminAttendanceView: React.FC = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <button
             onClick={handleToday}
@@ -319,7 +326,7 @@ export const AdminAttendanceView: React.FC = () => {
       </div>
 
       {/* Attendance Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0">
@@ -378,20 +385,43 @@ export const AdminAttendanceView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {attendance.checkOut && attendance.checkIn && attendance.hoursWorked !== undefined && attendance.hoursWorked !== null ? (
-                          <div className="text-sm">
-                            <div className="text-gray-600">
-                              {formatTime(attendance.checkIn)} to {formatTime(attendance.checkOut)}
-                            </div>
-                            <div className="text-green-600 font-medium mt-1">
-                              = {formatTimeWorked(attendance.hoursWorked)}
-                            </div>
-                          </div>
-                        ) : attendance.checkIn && !attendance.checkOut ? (
-                          <span className="text-sm text-gray-500">Still working...</span>
-                        ) : (
-                          <span className="text-sm text-gray-400">--</span>
-                        )}
+                        {(() => {
+                          // If check-in and check-out are the same, show "0 hr"
+                          if (attendance.checkIn && attendance.checkOut) {
+                            const checkInTime = new Date(attendance.checkIn).getTime();
+                            const checkOutTime = new Date(attendance.checkOut).getTime();
+                            if (checkInTime === checkOutTime) {
+                              return <span className="text-sm text-gray-600 font-medium">0 hr</span>;
+                            }
+                          }
+                          
+                          // If both check-in and check-out exist, show hours worked prominently
+                          if (attendance.checkOut && attendance.checkIn) {
+                            // If hours worked is calculated and > 0, show it prominently
+                            if (attendance.hoursWorked !== undefined && attendance.hoursWorked !== null && attendance.hoursWorked > 0) {
+                              return (
+                                <div className="text-sm">
+                                  <div className="text-green-600 font-semibold">
+                                    {formatTimeWorked(attendance.hoursWorked)}
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-0.5">
+                                    {formatTime(attendance.checkIn)} - {formatTime(attendance.checkOut)}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            // If hours worked is 0, show 0 hr
+                            return <span className="text-sm text-gray-600 font-medium">0 hr</span>;
+                          }
+                          
+                          // If check-in exists but no check-out
+                          if (attendance.checkIn && !attendance.checkOut) {
+                            return <span className="text-sm text-gray-500">Still working...</span>;
+                          }
+                          
+                          // Default: show nothing or dash
+                          return <span className="text-sm text-gray-400">--</span>;
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(attendance.status)}
