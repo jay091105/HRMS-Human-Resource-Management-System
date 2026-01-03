@@ -49,17 +49,37 @@ export const Dashboard: React.FC = () => {
           setRecentAttendance(attendance.slice(0, 5));
           setRecentLeaves(leaves.slice(0, 5));
         } else {
-          const [attendance, leaves] = await Promise.all([
-            attendanceService.getMyAttendance(),
-            leaveService.getMyLeaves(),
-          ]);
+          // For employees, handle 404 errors gracefully (no profile yet)
+          let attendance: Attendance[] = [];
+          let leaves: Leave[] = [];
+          
+          try {
+            attendance = await attendanceService.getMyAttendance();
+          } catch (err: any) {
+            // If 404, user doesn't have profile yet - just use empty array
+            if (err?.response?.status !== 404) {
+              throw err;
+            }
+          }
+          
+          try {
+            leaves = await leaveService.getMyLeaves();
+          } catch (err: any) {
+            // If 404, user doesn't have profile yet - just use empty array
+            if (err?.response?.status !== 404) {
+              throw err;
+            }
+          }
           
           setRecentAttendance(attendance.slice(0, 5));
           setRecentLeaves(leaves.filter((l) => l.status === 'pending').slice(0, 5));
         }
       } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
+        // Only show error for non-404 errors
+        if (err?.response?.status !== 404) {
+          setError('Failed to load dashboard data');
+        }
       } finally {
         setLoading(false);
       }

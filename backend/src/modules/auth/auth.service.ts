@@ -39,8 +39,9 @@ export const authService = {
     };
   },
 
-  async login(email: string, password: string): Promise<AuthResponse> {
-    const user = await UserModel.findOne({ email });
+  async login(loginIdOrEmail: string, password: string): Promise<AuthResponse> {
+    // Support both login ID and email for login
+    const user = await UserModel.findOne({ email: loginIdOrEmail });
     if (!user) {
       throw new Error('Invalid credentials');
     }
@@ -60,6 +61,22 @@ export const authService = {
       },
       token,
     };
+  },
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isPasswordValid = await comparePassword(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+    user.password = hashedPassword;
+    await user.save();
   },
 };
 

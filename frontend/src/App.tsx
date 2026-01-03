@@ -10,10 +10,12 @@ const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  const isLandingPage = location.pathname === '/';
+  const isDashboardPage = location.pathname.startsWith('/dashboard');
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {isAuthenticated && !isAuthPage && (
+      {isAuthenticated && isDashboardPage && (
         <>
           <Sidebar />
           <div className="ml-64">
@@ -24,11 +26,11 @@ const AppContent: React.FC = () => {
           </div>
         </>
       )}
-      {!isAuthenticated || isAuthPage ? (
+      {(!isAuthenticated || isAuthPage || isLandingPage) && (
         <main>
           <AppRoutes />
         </main>
-      ) : null}
+      )}
     </div>
   );
 };

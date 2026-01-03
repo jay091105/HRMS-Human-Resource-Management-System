@@ -5,7 +5,7 @@ import { Input } from '../ui/Input';
 import { useNavigate } from 'react-router-dom';
 
 export const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +18,7 @@ export const LoginForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await login({ email, password });
+      await login({ email: loginId, password });
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
@@ -35,12 +35,12 @@ export const LoginForm: React.FC = () => {
         </div>
       )}
       <Input
-        type="email"
-        label="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        type="text"
+        label="Login Id/Email :-"
+        value={loginId}
+        onChange={(e) => setLoginId(e.target.value)}
         required
-        placeholder="Enter your email"
+        placeholder="Enter your login ID or email"
       />
       <Input
         type="password"
@@ -51,7 +51,7 @@ export const LoginForm: React.FC = () => {
         placeholder="Enter your password"
       />
       <Button type="submit" isLoading={isLoading} className="w-full">
-        Login
+        SIGN IN
       </Button>
     </form>
   );

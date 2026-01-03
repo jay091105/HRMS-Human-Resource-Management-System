@@ -5,8 +5,14 @@ import { EmployeeModel } from './employee.model';
 export const employeeController = {
   async createEmployee(req: Request, res: Response): Promise<void> {
     try {
-      const employee = await employeeService.createEmployee(req.body);
-      res.status(201).json(employee);
+      const result = await employeeService.createEmployee(req.body);
+      // Return employee data with loginId and temporaryPassword for the admin to share with employee
+      const { temporaryPassword, ...employeeData } = result;
+      res.status(201).json({
+        ...employeeData,
+        loginId: result.loginId,
+        temporaryPassword, // Include temporary password in response so admin can share it
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
@@ -27,10 +33,8 @@ export const employeeController = {
         return;
       }
 
-      const employee = await employeeService.createEmployee({
-        ...req.body,
-        userId,
-      });
+      // Create employee profile for existing user (user already logged in/signed up)
+      const employee = await employeeService.createEmployeeForExistingUser(userId, req.body);
       res.status(201).json(employee);
     } catch (error: any) {
       res.status(400).json({ message: error.message });

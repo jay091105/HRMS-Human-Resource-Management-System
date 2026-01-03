@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { Login } from '../pages/auth/Login';
 import { Signup } from '../pages/auth/Signup';
+import { LandingPage } from '../pages/LandingPage';
 import { Dashboard } from '../pages/dashboard/Dashboard';
 import { EmployeeList } from '../pages/dashboard/employees/EmployeeList';
 import { EmployeeProfile } from '../pages/dashboard/employees/EmployeeProfile';
@@ -15,6 +16,7 @@ import { MyProfile } from '../pages/dashboard/profile/MyProfile';
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       
@@ -90,7 +92,6 @@ export const AppRoutes: React.FC = () => {
         }
       />
       
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 };

@@ -15,7 +15,10 @@ export interface LoginCredentials {
 }
 
 export interface SignupData {
+  company?: string;
+  name?: string;
   email: string;
+  phone?: string;
   password: string;
   role?: 'admin' | 'employee';
 }
