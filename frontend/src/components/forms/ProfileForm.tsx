@@ -24,6 +24,17 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
     department: '',
     position: '',
     address: '',
+    gender: '',
+    maritalStatus: '',
+    manager: '',
+    location: '',
+    bankAccountNumber: '',
+    bankName: '',
+    ifscCode: '',
+    panNumber: '',
+    uanNumber: '',
+    hireDate: new Date().toISOString().split('T')[0],
+    salary: 0,
     ...initialData,
   });
   const [error, setError] = useState('');
@@ -104,6 +115,17 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           disabled={isReadOnly}
         />
       </div>
+      {!initialData && (
+        <Input
+          type="number"
+          label="Salary (Annual)"
+          value={formData.salary || ''}
+          onChange={(e) => setFormData({ ...formData, salary: parseFloat(e.target.value) || 0 })}
+          required
+          disabled={isReadOnly}
+          placeholder="Enter annual salary"
+        />
+      )}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Address
@@ -116,6 +138,118 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({
           disabled={isReadOnly}
         />
       </div>
+
+      {/* Additional Information */}
+      <div className="border-t pt-4 mt-4">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date of Joining
+            </label>
+            <Input
+              type="date"
+              value={formData.hireDate ? new Date(formData.hireDate).toISOString().split('T')[0] : ''}
+              onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })}
+              required
+              disabled={isReadOnly}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Gender
+            </label>
+            <select
+              value={formData.gender || ''}
+              onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isReadOnly}
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Marital Status
+            </label>
+            <select
+              value={formData.maritalStatus || ''}
+              onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isReadOnly}
+            >
+              <option value="">Select Status</option>
+              <option value="single">Single</option>
+              <option value="married">Married</option>
+              <option value="divorced">Divorced</option>
+              <option value="widowed">Widowed</option>
+            </select>
+          </div>
+          <Input
+            label="Manager"
+            value={formData.manager || ''}
+            onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
+            disabled={isReadOnly}
+          />
+          <Input
+            label="Location"
+            value={formData.location || ''}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            disabled={isReadOnly}
+          />
+          <Input
+            label="Employee Code"
+            value={formData.employeeId || ''}
+            onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+            disabled={isReadOnly || !!initialData}
+            placeholder="Auto-generated if not provided"
+          />
+        </div>
+      </div>
+
+      {/* Bank Details */}
+      <div className="border-t pt-4 mt-4">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Bank Details</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Bank Account Number"
+            value={formData.bankAccountNumber || ''}
+            onChange={(e) => setFormData({ ...formData, bankAccountNumber: e.target.value })}
+            disabled={isReadOnly}
+          />
+          <Input
+            label="Bank Name"
+            value={formData.bankName || ''}
+            onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+            disabled={isReadOnly}
+          />
+          <Input
+            label="IFSC Code"
+            value={formData.ifscCode || ''}
+            onChange={(e) => setFormData({ ...formData, ifscCode: e.target.value })}
+            disabled={isReadOnly}
+            placeholder="e.g., SBIN0001234"
+          />
+          <Input
+            label="PAN Number"
+            value={formData.panNumber || ''}
+            onChange={(e) => setFormData({ ...formData, panNumber: e.target.value })}
+            disabled={isReadOnly}
+            placeholder="e.g., ABCDE1234F"
+          />
+          <Input
+            label="UAN Number"
+            value={formData.uanNumber || ''}
+            onChange={(e) => setFormData({ ...formData, uanNumber: e.target.value })}
+            disabled={isReadOnly}
+            placeholder="Universal Account Number"
+          />
+        </div>
+      </div>
+
       {!isReadOnly && (
         <div className="flex gap-2">
           <Button type="submit" isLoading={isLoading} className="flex-1">

@@ -51,8 +51,10 @@ export const attendanceService = {
 
     const checkOut = checkOutTime || new Date();
     
-    // Calculate total time worked
-    const hoursWorked = (checkOut.getTime() - attendance.checkIn.getTime()) / (1000 * 60 * 60);
+    // Calculate total time worked (Check-out - Check-in)
+    // If check-in and check-out are the same, hours worked = 0
+    const timeDiff = checkOut.getTime() - attendance.checkIn.getTime();
+    const hoursWorked = Math.max(0, timeDiff / (1000 * 60 * 60)); // Ensure non-negative
 
     attendance.checkOut = checkOut;
     attendance.hoursWorked = Math.round(hoursWorked * 100) / 100;

@@ -18,6 +18,10 @@ export const Dashboard: React.FC = () => {
     todayAttendance: 0,
     pendingLeaves: 0,
     activeEmployees: 0,
+    present: 0,
+    absent: 0,
+    onLeave: 0,
+    notApplied: 0,
   });
   const [recentAttendance, setRecentAttendance] = useState<Attendance[]>([]);
   const [recentLeaves, setRecentLeaves] = useState<Leave[]>([]);
@@ -29,22 +33,25 @@ export const Dashboard: React.FC = () => {
       try {
         setError('');
         if (isAdmin) {
-          const [employees, attendance, leaves] = await Promise.all([
-            employeeService.getAllEmployees(),
-            attendanceService.getAllAttendance(),
-            leaveService.getAllLeaves('pending'),
-          ]);
+          const today = new Date();
+          const todayString = today.toISOString().split('T')[0];
           
-          const today = new Date().toISOString().split('T')[0];
-          const todayAtt = attendance.filter(
-            (a) => a.date.split('T')[0] === today
-          );
+          const [employees, attendance, leaves, attendanceStats] = await Promise.all([
+            employeeService.getAllEmployees(),
+            attendanceService.getAllAttendance(todayString),
+            leaveService.getAllLeaves('pending'),
+            attendanceService.getStatistics(todayString),
+          ]);
 
           setStats({
             totalEmployees: employees.length,
-            todayAttendance: todayAtt.length,
+            todayAttendance: attendance.length,
             pendingLeaves: leaves.length,
             activeEmployees: employees.filter(e => e.status === 'active').length,
+            present: attendanceStats.present,
+            absent: attendanceStats.absent,
+            onLeave: attendanceStats.onLeave,
+            notApplied: attendanceStats.notApplied,
           });
           setRecentAttendance(attendance.slice(0, 5));
           setRecentLeaves(leaves.slice(0, 5));
@@ -193,63 +200,126 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {isAdmin && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 uppercase">Total Employees</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalEmployees}</p>
+        <>
+          {/* Attendance Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div 
+              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/dashboard/employees')}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Employees</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalEmployees}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+            </div>
+
+            <div 
+              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/dashboard/attendance?filter=present')}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Present Today</p>
+                  <p className="text-3xl font-bold text-green-600 mt-2">{stats.present || 0}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/dashboard/attendance?filter=absent')}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Absent Today</p>
+                  <p className="text-3xl font-bold text-red-600 mt-2">{stats.absent || 0}</p>
+                </div>
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/dashboard/leave?filter=approved')}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">On Leave</p>
+                  <p className="text-3xl font-bold text-orange-600 mt-2">{stats.onLeave || 0}</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className="bg-white rounded-lg shadow-md p-6 border-l-4 border-gray-500 cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/dashboard/attendance?filter=not-applied')}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Not Applied</p>
+                  <p className="text-3xl font-bold text-gray-600 mt-2">{stats.notApplied || 0}</p>
+                </div>
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 uppercase">Present Today</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.todayAttendance}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+          {/* Other Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 uppercase">Pending Leave Requests</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.pendingLeaves}</p>
+                </div>
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 uppercase">On Leave</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.pendingLeaves}</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 uppercase">Pending Requests</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.pendingLeaves}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 uppercase">Active Employees</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.activeEmployees}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {!isAdmin && (

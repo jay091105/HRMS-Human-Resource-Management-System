@@ -66,18 +66,24 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
     }
   };
 
-  const formatTimeWorked = (hours?: number): string => {
-    if (!hours || hours === 0) return '--';
+  const formatTimeWorked = (hours?: number, hasCheckOut?: boolean): string => {
+    // If check-out is missing, show "Incomplete"
+    if (hasCheckOut === false) {
+      return 'Incomplete';
+    }
+    // If hours is 0 or undefined, show 0h if checked out, otherwise Incomplete
+    if (!hours || hours === 0) {
+      return hasCheckOut ? '0h' : 'Incomplete';
+    }
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     if (h > 0 && m > 0) {
       return `${h}h ${m}m`;
     } else if (h > 0) {
-      return `${h} ${h === 1 ? 'hour' : 'hours'}`;
-    } else if (m > 0) {
-      return `${m} ${m === 1 ? 'minute' : 'minutes'}`;
+      return `${h}h`;
+    } else {
+      return `${m}m`;
     }
-    return '0 hours';
   };
 
   const getStatusBadge = (status?: string) => {
@@ -272,7 +278,7 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`text-sm ${attendance.hoursWorked && attendance.checkOut ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                            {attendance.checkOut ? formatTimeWorked(attendance.hoursWorked) : '--'}
+                            {formatTimeWorked(attendance.hoursWorked, !!attendance.checkOut)}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

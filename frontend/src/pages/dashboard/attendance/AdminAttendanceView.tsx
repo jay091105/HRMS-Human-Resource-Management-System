@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { attendanceService } from '../../../services/attendance.service';
 import { AttendanceWithEmployee } from '../../../types/attendance';
 import { formatTime, getDateString } from '../../../utils/formatDate';
@@ -15,7 +16,10 @@ interface AttendanceStatistics {
 }
 
 export const AdminAttendanceView: React.FC = () => {
-  const [attendances, setAttendances] = useState<AttendanceWithEmployee[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFilter = searchParams.get('filter');
+  
+  const [, setAttendances] = useState<AttendanceWithEmployee[]>([]);
   const [allEmployees, setAllEmployees] = useState<AttendanceWithEmployee[]>([]);
   const [filteredAttendances, setFilteredAttendances] = useState<AttendanceWithEmployee[]>([]);
   const [statistics, setStatistics] = useState<AttendanceStatistics>({
@@ -39,18 +43,34 @@ export const AdminAttendanceView: React.FC = () => {
   }, [selectedDate]);
 
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredAttendances(allEmployees);
-    } else {
+    let filtered = allEmployees;
+    
+    // Apply status filter from URL
+    if (statusFilter) {
+      if (statusFilter === 'present') {
+        filtered = filtered.filter(emp => emp.status === 'present' || emp.status === 'late');
+      } else if (statusFilter === 'absent') {
+        filtered = filtered.filter(emp => emp.status === 'absent');
+      } else if (statusFilter === 'on-leave') {
+        // Filter employees on leave (they might have status as string or be identified differently)
+        filtered = filtered.filter(emp => (emp.status as string) === 'on-leave' || (emp.status as string) === 'On Leave');
+      } else if (statusFilter === 'not-applied') {
+        filtered = filtered.filter(emp => !emp.status || (emp.status as string) === 'not-applied');
+      }
+    }
+    
+    // Apply search query filter
+    if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
-      const filtered = allEmployees.filter(
+      filtered = filtered.filter(
         (emp) =>
           emp.employeeName?.toLowerCase().includes(query) ||
           emp.employeeCode?.toLowerCase().includes(query)
       );
-      setFilteredAttendances(filtered);
     }
-  }, [searchQuery, allEmployees]);
+    
+    setFilteredAttendances(filtered);
+  }, [searchQuery, allEmployees, statusFilter]);
 
   const fetchData = async () => {
     try {
@@ -66,11 +86,6 @@ export const AdminAttendanceView: React.FC = () => {
 
       setAttendances(attendanceData);
       setStatistics(statsData);
-
-      // Create a map of employee IDs to attendance records
-      const attendanceMap = new Map(
-        attendanceData.map((att) => [att.employeeId, att])
-      );
 
       // Create list of all employees (with or without attendance)
       // For now, we'll use the attendance data. In a real app, you'd fetch all employees separately
@@ -107,18 +122,24 @@ export const AdminAttendanceView: React.FC = () => {
     setSelectedDate(new Date());
   };
 
-  const formatTimeWorked = (hours?: number): string => {
-    if (!hours || hours === 0) return '--';
+  const formatTimeWorked = (hours?: number, hasCheckOut?: boolean): string => {
+    // If check-out is missing, show "Incomplete"
+    if (hasCheckOut === false) {
+      return 'Incomplete';
+    }
+    // If hours is 0 or undefined, show 0h if checked out, otherwise Incomplete
+    if (!hours || hours === 0) {
+      return hasCheckOut ? '0h' : 'Incomplete';
+    }
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     if (h > 0 && m > 0) {
       return `${h}h ${m}m`;
     } else if (h > 0) {
-      return `${h} ${h === 1 ? 'hour' : 'hours'}`;
-    } else if (m > 0) {
-      return `${m} ${m === 1 ? 'minute' : 'minutes'}`;
+      return `${h}h`;
+    } else {
+      return `${m}m`;
     }
-    return '0 hours';
   };
 
   const getStatusBadge = (status?: string) => {
@@ -185,6 +206,28 @@ export const AdminAttendanceView: React.FC = () => {
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* Status Filter Badge */}
+      {statusFilter && (
+        <div className="mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg">
+            <span className="text-sm font-medium">
+              Filter: {statusFilter === 'present' ? 'Present' : statusFilter === 'absent' ? 'Absent' : statusFilter === 'on-leave' ? 'On Leave' : 'Not Applied'}
+            </span>
+            <button
+              onClick={() => {
+                searchParams.delete('filter');
+                setSearchParams(searchParams);
+              }}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 
@@ -320,6 +363,28 @@ export const AdminAttendanceView: React.FC = () => {
         </div>
       </div>
 
+      {/* Date Display and Company Total Hours */}
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-lg font-semibold text-gray-700">
+          {selectedDate.toLocaleDateString('en-US', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}
+        </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+          <p className="text-sm text-gray-600">Total Company Hours</p>
+          <p className="text-xl font-bold text-blue-700">
+            {formatTimeWorked(
+              filteredAttendances
+                .filter(att => att.checkOut && att.hoursWorked)
+                .reduce((sum, att) => sum + (att.hoursWorked || 0), 0),
+              true
+            )}
+          </p>
+        </div>
+      </div>
+
       {/* Attendance Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
@@ -380,8 +445,14 @@ export const AdminAttendanceView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm ${attendance.hoursWorked && attendance.hoursWorked > 0 ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                          {attendance.checkOut ? formatTimeWorked(attendance.hoursWorked) : '--'}
+                        <span className={`text-sm ${
+                          attendance.checkOut && attendance.hoursWorked && attendance.hoursWorked > 0 
+                            ? 'text-green-600 font-medium' 
+                            : attendance.checkOut 
+                            ? 'text-gray-600' 
+                            : 'text-orange-600 font-medium'
+                        }`}>
+                          {formatTimeWorked(attendance.hoursWorked, !!attendance.checkOut)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -395,7 +466,7 @@ export const AdminAttendanceView: React.FC = () => {
                               if (empId) {
                                 console.log('Opening monthly report for employee:', empId, employeeName);
                                 setSelectedEmployeeForMonthly({
-                                  employeeId: typeof empId === 'string' ? empId : empId.toString(),
+                                  employeeId: String(empId),
                                   employeeName: employeeName,
                                 });
                               } else {

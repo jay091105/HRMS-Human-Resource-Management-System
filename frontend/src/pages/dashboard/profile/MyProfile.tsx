@@ -9,6 +9,7 @@ import { formatDate } from '../../../utils/formatDate';
 import { StatusDot } from '../../../components/ui/StatusDot';
 import { ChangePasswordForm } from '../../../components/forms/ChangePasswordForm';
 import { authService } from '../../../services/auth.service';
+import { ProfileForm } from '../../../components/forms/ProfileForm';
 
 type TabType = 'resume' | 'private' | 'salary' | 'security';
 
@@ -240,12 +241,30 @@ export const MyProfile: React.FC = () => {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
               <p className="text-gray-600 mb-6">
-                You need to create your employee profile to access all features.
+                Please create your employee profile to access the system.
               </p>
             </div>
-            <Button onClick={() => window.location.href = '/dashboard'}>
-              Go to Dashboard
-            </Button>
+            <ProfileForm
+              initialData={user?.email ? { email: user.email } : undefined}
+              onSubmit={async (data) => {
+                try {
+                  const profileData = {
+                    ...data,
+                    email: user?.email || data.email || '',
+                    salary: data.salary || 0,
+                    status: 'active' as const,
+                  };
+                  const created = await employeeService.createMyProfile(profileData);
+                  setEmployee(created);
+                  setError('');
+                  // Refresh page to update profile check
+                  window.location.reload();
+                } catch (err: any) {
+                  setError(err.response?.data?.message || 'Failed to create profile');
+                  throw err;
+                }
+              }}
+            />
           </div>
         </div>
       </div>

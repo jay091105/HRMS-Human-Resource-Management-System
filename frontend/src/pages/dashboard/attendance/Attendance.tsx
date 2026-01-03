@@ -85,9 +85,18 @@ export const AttendancePage: React.FC = () => {
       setError('');
       setSuccess('');
       await attendanceService.checkOut();
-      setSuccess('Checked out successfully!');
+      setSuccess('Checked out successfully! Hours worked calculated.');
       setCanCheckOut(false);
-      const data = await attendanceService.getMyAttendance();
+      
+      // Refresh attendance data to get updated hours worked
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const data = await attendanceService.getMyAttendance(
+        getDateString(startOfMonth),
+        getDateString(endOfMonth)
+      );
       setAttendances(data);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
@@ -183,25 +192,25 @@ export const AttendancePage: React.FC = () => {
                 {todayAttendance.checkOut ? new Date(todayAttendance.checkOut).toLocaleTimeString() : 'Not checked out'}
               </p>
             </div>
-            {todayAttendance.hoursWorked && todayAttendance.checkOut && (
-              <div className="bg-blue-50 rounded-lg p-3">
-                <span className="text-blue-600 text-xs font-medium">Hours Worked</span>
-                <p className="text-gray-900 font-semibold mt-1">
-                  {(() => {
-                    const hours = Math.floor(todayAttendance.hoursWorked);
-                    const minutes = Math.round((todayAttendance.hoursWorked % 1) * 60);
-                    if (hours > 0 && minutes > 0) {
-                      return `${hours}h ${minutes}m`;
-                    } else if (hours > 0) {
-                      return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
-                    } else if (minutes > 0) {
-                      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
-                    }
-                    return '0 hours';
-                  })()}
-                </p>
-              </div>
-            )}
+            <div className="bg-blue-50 rounded-lg p-3">
+              <span className="text-blue-600 text-xs font-medium">Hours Worked</span>
+              <p className={`font-semibold mt-1 ${todayAttendance.checkOut ? 'text-gray-900' : 'text-orange-600'}`}>
+                {todayAttendance.checkOut && todayAttendance.hoursWorked !== undefined
+                  ? (() => {
+                      const hours = Math.floor(todayAttendance.hoursWorked);
+                      const minutes = Math.round((todayAttendance.hoursWorked % 1) * 60);
+                      if (hours > 0 && minutes > 0) {
+                        return `${hours}h ${minutes}m`;
+                      } else if (hours > 0) {
+                        return `${hours}h`;
+                      } else if (minutes > 0) {
+                        return `${minutes}m`;
+                      }
+                      return '0h';
+                    })()
+                  : 'Incomplete'}
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -271,21 +280,27 @@ export const AttendancePage: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`text-sm ${attendance.hoursWorked ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                            {attendance.hoursWorked && attendance.checkOut
+                          <span className={`text-sm ${
+                            attendance.checkOut && attendance.hoursWorked && attendance.hoursWorked > 0
+                              ? 'text-green-600 font-medium'
+                              : attendance.checkOut
+                              ? 'text-gray-600'
+                              : 'text-orange-600 font-medium'
+                          }`}>
+                            {attendance.checkOut && attendance.hoursWorked !== undefined
                               ? (() => {
                                   const hours = Math.floor(attendance.hoursWorked);
                                   const minutes = Math.round((attendance.hoursWorked % 1) * 60);
                                   if (hours > 0 && minutes > 0) {
                                     return `${hours}h ${minutes}m`;
                                   } else if (hours > 0) {
-                                    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+                                    return `${hours}h`;
                                   } else if (minutes > 0) {
-                                    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+                                    return `${minutes}m`;
                                   }
-                                  return '0 hours';
+                                  return '0h';
                                 })()
-                              : '--'}
+                              : 'Incomplete'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

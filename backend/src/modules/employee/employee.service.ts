@@ -48,15 +48,28 @@ export const employeeService = {
     // Ensure hireDate is a Date object
     const hireDate = data.hireDate instanceof Date ? data.hireDate : new Date(data.hireDate);
     
-    // Generate login ID using the format: OI + initials + year + serial
-    const employeeId = await generateEmployeeId(data.firstName, data.lastName, hireDate);
+    // Use provided employeeId or generate one
+    let employeeId: string;
+    if ((data as any).employeeId && (data as any).employeeId.trim()) {
+      employeeId = (data as any).employeeId.trim();
+      // Check if employeeId already exists
+      const existing = await EmployeeModel.findOne({ employeeId });
+      if (existing) {
+        throw new Error('Employee ID already exists');
+      }
+    } else {
+      // Generate login ID using the format: OI + initials + year + serial
+      employeeId = await generateEmployeeId(data.firstName, data.lastName, hireDate);
+    }
     
     // Create employee record linked to existing user
+    const { employeeId: _, ...dataWithoutEmployeeId } = data as any;
     const employee = await EmployeeModel.create({
-      ...data,
+      ...dataWithoutEmployeeId,
       hireDate,
       employeeId,
       userId,
+      status: data.status || 'active',
     });
     
     return toPlainObject<Employee>(employee)!;
