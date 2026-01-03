@@ -15,26 +15,22 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/dashboard" className="text-xl font-bold text-blue-600">
-              Dayflow HRMS
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            {user && (
-              <>
-                <span className="text-sm text-gray-700">
-                  {user.email} ({isAdmin ? 'Admin' : 'Employee'})
-                </span>
-                <Button variant="outline" size="sm" onClick={handleLogout}>
-                  Logout
-                </Button>
-              </>
-            )}
-          </div>
+    <nav className="bg-white shadow-sm border-b border-gray-200">
+      <div className="px-8 h-16 flex items-center justify-between">
+        <Link to="/dashboard" className="text-xl font-bold text-gray-900">
+          Dayflow HRMS
+        </Link>
+        <div className="flex items-center gap-4">
+          {user && (
+            <>
+              <span className="text-sm text-gray-700">
+                {user.email} ({isAdmin ? 'Admin' : 'Employee'})
+              </span>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                Logout
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </nav>

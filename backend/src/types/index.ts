@@ -38,6 +38,7 @@ export interface Attendance {
   checkOut?: Date;
   status: 'present' | 'absent' | 'late' | 'half-day';
   hoursWorked?: number;
+  extraHours?: number;
   notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -46,12 +47,14 @@ export interface Attendance {
 export interface Leave {
   _id?: string;
   employeeId: string;
-  type: 'sick' | 'vacation' | 'personal' | 'maternity' | 'paternity' | 'other';
+  type: 'paid' | 'sick' | 'unpaid' | 'vacation' | 'personal' | 'maternity' | 'paternity' | 'other';
   startDate: Date;
   endDate: Date;
   days: number;
+  allocation: number;
   reason: string;
   status: 'pending' | 'approved' | 'rejected';
+  attachment?: string; // URL or path to attachment (mandatory for sick leave)
   approvedBy?: string;
   approvedAt?: Date;
   comments?: string;
