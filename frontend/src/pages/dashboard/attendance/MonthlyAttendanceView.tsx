@@ -67,10 +67,17 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
   };
 
   const formatTimeWorked = (hours?: number): string => {
-    if (!hours) return '--';
+    if (!hours || hours === 0) return '--';
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
-    return `${h}:${String(m).padStart(2, '0')}`;
+    if (h > 0 && m > 0) {
+      return `${h}h ${m}m`;
+    } else if (h > 0) {
+      return `${h} ${h === 1 ? 'hour' : 'hours'}`;
+    } else if (m > 0) {
+      return `${m} ${m === 1 ? 'minute' : 'minutes'}`;
+    }
+    return '0 hours';
   };
 
   const getStatusBadge = (status?: string) => {
@@ -204,7 +211,22 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
             </div>
             <div className="bg-white rounded-lg shadow-md p-4">
               <p className="text-sm font-medium text-gray-600">Total Hours</p>
-              <p className="text-xl font-bold text-gray-900 mt-1">{formatTimeWorked(data.summary.totalHours)}</p>
+              <p className="text-xl font-bold text-gray-900 mt-1">
+                {data.summary.totalHours 
+                  ? (() => {
+                      const hours = Math.floor(data.summary.totalHours);
+                      const minutes = Math.round((data.summary.totalHours % 1) * 60);
+                      if (hours > 0 && minutes > 0) {
+                        return `${hours}h ${minutes}m`;
+                      } else if (hours > 0) {
+                        return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+                      } else if (minutes > 0) {
+                        return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+                      }
+                      return '0 hours';
+                    })()
+                  : '0 hours'}
+              </p>
             </div>
           </div>
 
@@ -249,8 +271,8 @@ export const MonthlyAttendanceView: React.FC<MonthlyAttendanceViewProps> = ({
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`text-sm ${attendance.hoursWorked ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
-                            {formatTimeWorked(attendance.hoursWorked)}
+                          <span className={`text-sm ${attendance.hoursWorked && attendance.checkOut ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                            {attendance.checkOut ? formatTimeWorked(attendance.hoursWorked) : '--'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

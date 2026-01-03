@@ -99,5 +99,15 @@ export const payrollController = {
       res.status(500).json({ message: error.message });
     }
   },
+
+  async markAsPaid(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const payroll = await payrollService.markAsPaid(id);
+      res.status(200).json(payroll);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  },
 };
 

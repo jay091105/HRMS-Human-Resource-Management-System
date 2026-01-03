@@ -27,9 +27,21 @@ export const AttendanceCard: React.FC<AttendanceCardProps> = ({ attendance }) =>
             <span className="font-medium">Check Out:</span> {formatTime(attendance.checkOut)}
           </p>
         )}
-        {attendance.hoursWorked && (
+        {attendance.hoursWorked && attendance.checkOut && (
           <p>
-            <span className="font-medium">Hours Worked:</span> {attendance.hoursWorked} hrs
+            <span className="font-medium">Hours Worked:</span>{' '}
+            {(() => {
+              const hours = Math.floor(attendance.hoursWorked);
+              const minutes = Math.round((attendance.hoursWorked % 1) * 60);
+              if (hours > 0 && minutes > 0) {
+                return `${hours}h ${minutes}m`;
+              } else if (hours > 0) {
+                return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+              } else if (minutes > 0) {
+                return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+              }
+              return '0 hours';
+            })()}
           </p>
         )}
         {attendance.notes && (

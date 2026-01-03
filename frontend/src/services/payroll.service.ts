@@ -45,5 +45,10 @@ export const payrollService = {
   async deletePayroll(id: string): Promise<void> {
     await api.delete(`/payroll/${id}`);
   },
+
+  async markAsPaid(id: string): Promise<Payroll> {
+    const response = await api.post<Payroll>(`/payroll/${id}/mark-paid`);
+    return response.data;
+  },
 };
 

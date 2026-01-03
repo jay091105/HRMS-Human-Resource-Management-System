@@ -5,8 +5,21 @@ import { Payroll } from '../../../types/payroll';
 import { StatusDot } from '../../../components/ui/StatusDot';
 import { Button } from '../../../components/ui/Button';
 import { formatDate } from '../../../utils/formatDate';
+import { AdminPayrollManagement } from './AdminPayrollManagement';
+import { EmployeeSalaryView } from './EmployeeSalaryView';
 
 export const SalaryView: React.FC = () => {
+  const { isAdmin } = useRole();
+  
+  if (isAdmin) {
+    return <AdminPayrollManagement />;
+  }
+  
+  return <EmployeeSalaryView />;
+};
+
+// Keep the old component code for reference but it won't be used
+const OldSalaryView: React.FC = () => {
   const { isAdmin } = useRole();
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [filteredPayrolls, setFilteredPayrolls] = useState<Payroll[]>([]);

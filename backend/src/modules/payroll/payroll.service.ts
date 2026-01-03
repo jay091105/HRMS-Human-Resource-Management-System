@@ -97,5 +97,22 @@ export const payrollService = {
     const result = await PayrollModel.findByIdAndDelete(payrollId);
     return !!result;
   },
+
+  async markAsPaid(payrollId: string): Promise<Payroll> {
+    const payroll = await PayrollModel.findByIdAndUpdate(
+      payrollId,
+      {
+        status: 'paid',
+        paymentDate: new Date(),
+      },
+      { new: true }
+    ).populate('employeeId', 'userId firstName lastName email');
+
+    if (!payroll) {
+      throw new Error('Payroll not found');
+    }
+
+    return toPlainObject<Payroll>(payroll)!;
+  },
 };
 

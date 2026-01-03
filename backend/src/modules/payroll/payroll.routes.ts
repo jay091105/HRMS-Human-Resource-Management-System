@@ -14,6 +14,7 @@ router.get('/:id', payrollController.getPayroll);
 
 // Admin routes
 router.post('/', roleMiddleware(['admin']), payrollController.createPayroll);
+router.post('/:id/mark-paid', roleMiddleware(['admin']), payrollController.markAsPaid);
 router.get('/', roleMiddleware(['admin']), payrollController.getAllPayrolls);
 router.put('/:id', roleMiddleware(['admin']), payrollController.updatePayroll);
 router.delete('/:id', roleMiddleware(['admin']), payrollController.deletePayroll);
